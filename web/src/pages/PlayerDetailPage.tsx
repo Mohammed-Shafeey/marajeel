@@ -59,8 +59,8 @@ export default function PlayerDetailPage() {
       <section className="tx-halftone relative overflow-hidden bg-brand px-4 pb-6 pt-4 text-on-brand">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 sm:flex-row sm:items-end">
           <PlayerCard player={player} stats={statsAll} settings={settings} team="a" className="card-reveal" />
-          <div className="flex flex-col items-center gap-1 sm:items-start">
-            <h2 className="font-display text-h1 font-extrabold !leading-snug">{player.name}</h2>
+          <div className="flex flex-col items-center gap-2 sm:items-start">
+            <h2 className="mb-2 font-display text-h1 font-extrabold !leading-snug">{player.name}</h2>
             <div className="flex flex-wrap items-center justify-center gap-2 text-small font-semibold">
               <span className="bg-ink px-2 py-0.5 text-on-ink">{t(`card.${tier === 'prov' ? 'provisional' : tier}`, { n: statsAll?.games ?? 0, of: settings.provisionalGames })}</span>
               {statsAll?.bestPosition && <span>{t('players.bestPosition', { pos: t(`pos.${statsAll.bestPosition}`) })}</span>}
