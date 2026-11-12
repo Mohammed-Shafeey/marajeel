@@ -167,12 +167,12 @@ function SortTable<R>({ rows, cols, rowKey, initial }: { rows: R[]; cols: Col<R>
   if (rows.length === 0) return <EmptyState title={t('boards.empty')} hint={t('boards.emptyHint')} />;
   return (
     <div className="card-panel overflow-x-auto">
-      <table className="w-full border-collapse text-small">
+      <table className="w-full table-fixed border-collapse text-small">
         <thead className="bg-surface-2">
           <tr>
             <th className="w-10 px-2 py-2 text-center font-display text-[15px]">{t('boards.rank')}</th>
             {cols.map((c) => (
-              <th key={c.key} aria-sort={sort.key === c.key ? (sort.desc ? 'descending' : 'ascending') : 'none'} className={`px-2 py-0 ${c.numeric ? 'text-end' : 'text-start'}`}>
+              <th key={c.key} aria-sort={sort.key === c.key ? (sort.desc ? 'descending' : 'ascending') : 'none'} className={`px-2 py-0 ${c.numeric ? 'text-center' : 'text-start'}`}>
                 <button
                   type="button"
                   className="min-h-tap font-display text-[15px] font-bold"
@@ -190,7 +190,7 @@ function SortTable<R>({ rows, cols, rowKey, initial }: { rows: R[]; cols: Col<R>
             <tr key={rowKey(r)} className="border-t border-line">
               <td className={`num px-2 text-center font-extrabold ${i < 3 && sort.desc ? 'text-brand-text' : 'text-fg-3'}`}>{fmtNum(i + 1)}</td>
               {cols.map((c) => (
-                <td key={c.key} className={`px-2 ${c.numeric ? 'text-end font-num text-[17px] font-extrabold tabular-nums' : 'max-w-[180px]'}`}>
+                <td key={c.key} className={`px-2 ${c.numeric ? 'text-center font-num text-[17px] font-extrabold tabular-nums' : 'truncate'}`}>
                   {c.render ? c.render(r) : String(c.value(r))}
                 </td>
               ))}
