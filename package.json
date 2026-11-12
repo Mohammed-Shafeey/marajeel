@@ -1,0 +1,19 @@
+{
+  "name": "marajeel",
+  "private": true,
+  "scripts": {
+    "azurite": "azurite --silent --location .azurite --skipApiVersionCheck --loose",
+    "api": "cd api/Marajeel.Api && func start --port 7071",
+    "web": "npm --prefix web run dev",
+    "swa": "swa start http://localhost:5173 --api-devserver-url http://localhost:7071 --port 4280",
+    "dev": "concurrently -k -n azurite,api,web,swa -c gray,blue,magenta,green \"npm:azurite\" \"npm:api\" \"npm:web\" \"npm:swa\"",
+    "seed": "dotnet run --project api/Marajeel.Seed -- --reset",
+    "test": "dotnet test api/Marajeel.sln && npm --prefix web test"
+  },
+  "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.1.0",
+    "azure-functions-core-tools": "^4.16.0",
+    "azurite": "^3.37.0",
+    "concurrently": "^9.2.5"
+  }
+}

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Design tokens</title>
+<script src="cce21575-5013-4b52-ae7b-d32e7a807689"></script>
+<style>/* ==========================================================
+   طائرة المراجيل · Al-Marajeel Volleyball — design tokens v2
+   "Street-sport" direction: concrete textures, brush swashes,
+   slanted panels, condensed type, FUT-style collectible cards.
+   Light is default; data-theme="dark" on any ancestor = night court.
+   Map 1:1 into tailwind.config theme.extend.
+   Fonts (Google): Barlow Condensed 600/700/800 · Changa 500/700/800 ·
+                   IBM Plex Sans Arabic 400/500/600/700
+   ========================================================== */
+
+:root, [data-theme="light"] {
+  /* ---- Brand ---- */
+  --brand: #D81B5C;          /* Marajeel pink: primary actions, active tab, titles */
+  --brand-strong: #B0124A;   /* pressed */
+  --brand-soft: #FFE1EB;     /* tints, selected rows */
+  --brand-text: #B0124A;     /* pink text on light · 7.0:1 */
+  --on-brand: #FFFFFF;       /* 5.0:1 on --brand (use ≥16px bold) */
+  --cyan: #22D3E6;           /* secondary accent: active tab block, NEW tags, swashes */
+  --cyan-text: #00707C;      /* cyan as text on light · 5.6:1 */
+  --on-cyan: #121218;        /* 10.6:1 */
+  --volt: #F4E22B;           /* MVP, streaks, "in form" — fills only, ink text */
+  --on-volt: #121218;        /* 14.2:1 */
+  --ink: #121218;            /* secondary solid fill, nav bar, dark panels */
+  --on-ink: #FFFFFF;
+
+  /* ---- Surfaces & text (concrete) ---- */
+  --bg: #E7E6E1;             /* concrete wall — always with .tx-concrete */
+  --surface: #FFFFFF;        /* panels, cards, sheets */
+  --surface-2: #F2F1ED;      /* inputs, tracks, table header */
+  --surface-3: #E2E0DA;      /* skeleton shimmer, pressed */
+  --border: #CFCDC6;
+  --border-strong: #A9A69E;
+  --text: #121218;           /* 18.6:1 on surface */
+  --text-2: #45444E;         /* 9.6:1 */
+  --text-3: #5E5D66;         /* 6.5:1 — lowest allowed for text */
+  --focus: #0B6BD6;
+  --scrim: rgba(18, 18, 24, .6);
+  --tex-ink: rgba(18, 18, 24, .07);   /* speckle / halftone ink on light */
+  --tex-light: rgba(255, 255, 255, .22);
+
+  /* ---- Semantic ---- */
+  --win: #13773C;   --win-bg: #DDF3E5;
+  --loss: #BE2A2A;  --loss-bg: #FBE3E3;
+  --warn: #8A5800;  --warn-bg: #FFF0C7;
+  --info: #0B6BD6;  --info-bg: #E2EEFD;
+
+  /* ---- Chemistry (+ weight + dash; negative is always dashed) ---- */
+  --chem-neg-strong: #BE2A2A; --chem-neg: #E06B5F; --chem-neutral: #9A98A2;
+  --chem-pos: #3FA668; --chem-pos-strong: #12804A;
+
+  /* ---- Teams: fill · tint · line/text · text-on-fill ----
+     A أزرق Blue ● dots · B برتقالي Orange ▲ stripes ·
+     C بنفسجي Lilac ■ bars · D فيروزي Teal ◆ crosshatch (spare) */
+  --team-a: #1F5FBF; --team-a-soft: #E1EAF9; --team-a-line: #1F5FBF; --on-team-a: #FFFFFF;
+  --team-b: #E0620F; --team-b-soft: #FDE8D8; --team-b-line: #B44A06; --on-team-b: #121218;
+  --team-c: #A77BDB; --team-c-soft: #F0E8FB; --team-c-line: #6B3FA0; --on-team-c: #121218;
+  --team-d: #2BB3A3; --team-d-soft: #DCF4F1; --team-d-line: #0F766E; --on-team-d: #121218;
+
+  /* ---- Card tiers (FUT-style material, by overall rating) ---- */
+  --tier-gold-1: #F6DC8A;   --tier-gold-2: #C9972B;   --on-gold: #2E2104;     /* 75+ */
+  --tier-silver-1: #ECEEF1; --tier-silver-2: #9DA3AC; --on-silver: #1E2126;   /* 65–74 */
+  --tier-bronze-1: #EBB58A; --tier-bronze-2: #A3602F; --on-bronze: #2A1505;   /* < 65 */
+  --tier-mvp-1: #1B1B22;    --tier-mvp-2: #121218;    --on-mvp: #F4E22B;      /* session MVP / in-form */
+  --tier-prov-1: #F2F1ED;   --tier-prov-2: #CFCDC6;   --on-prov: #45444E;     /* < 5 games */
+
+  /* ---- Court ---- */
+  --court: #F0A65E; --court-2: #E8964A; --court-line: #FFFFFF; --court-out: #3A7D8C; --net: #121218;
+
+  /* ---- Typography ---- */
+  --font-display: "Barlow Condensed", "Changa", sans-serif;   /* Latin → Barlow, Arabic → Changa */
+  --font-num: "Barlow Condensed", "Changa", sans-serif;       /* + tabular-nums */
+  --font-ui: "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif;
+  --fs-hero: 64px;    --lh-hero: .95;   /* score, card rating · 800 */
+  --fs-display: 40px; --lh-display: 1.05;/* screen hero titles · 800, Latin UPPERCASE */
+  --fs-h1: 30px;      --lh-h1: 1.1;     /* tile titles · 700 */
+  --fs-h2: 22px;      --lh-h2: 1.2;     /* section titles · 700 */
+  --fs-h3: 17px;      --lh-h3: 1.4;     /* list titles · Plex 700 */
+  --fs-body: 16px;    --lh-body: 1.6;   /* Plex 400–500 */
+  --fs-small: 14px;   --lh-small: 1.55; /* Plex 500 */
+  --fs-caption: 12px; --lh-caption: 1.4;/* floor · Plex 600 / Barlow 700 uppercase +.06em */
+  --ls-caps: .04em;
+
+  /* ---- Spacing & targets ---- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
+  --tap-min: 44px; --tap: 48px; --tap-xl: 112px;
+  --nav-h: 68px; --action-bar-h: 80px; --gutter: 16px;
+
+  /* ---- Shape: mostly sharp, cut corners, slants ---- */
+  --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 10px; --r-pill: 999px;
+  --cut: 14px;          /* corner cut on panels/buttons */
+  --slant: 10deg;       /* skew for tabs, tags, swashes */
+  --bw-hair: 1px; --bw-strong: 2px; --bw-ring: 3px;
+
+  /* ---- Elevation: hard, offset, poster-like ---- */
+  --e-1: 0 2px 0 rgba(18, 18, 24, .10), 0 1px 3px rgba(18, 18, 24, .10);
+  --e-2: 0 10px 24px -8px rgba(18, 18, 24, .28);
+  --e-3: 0 24px 40px -12px rgba(18, 18, 24, .45);  /* dragging (use filter: drop-shadow on clipped cards) */
+  --e-pop: 6px 6px 0 #121218;                       /* sticker offset for hero CTAs */
+
+  /* ---- Motion ---- */
+  --dur-press: 80ms; --dur-fast: 140ms; --dur-base: 200ms; --dur-slow: 320ms;
+  --dur-lift: 120ms; --dur-drop: 220ms; --dur-swap: 260ms; --dur-score: 180ms;
+  --dur-reveal: 600ms;  /* card flip when a provisional player reaches 5 games — the one showpiece */
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0, 0, .2, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-settle: cubic-bezier(.34, 1.3, .64, 1);
+}
+
+[data-theme="dark"] {
+  --brand-soft: #3A1323; --brand-text: #FF6A9C;
+  --cyan-text: #4FE3F2;
+  --ink: #F4F3EF; --on-ink: #121218;
+  --bg: #111116; --surface: #1C1C23; --surface-2: #25252E; --surface-3: #2F2F39;
+  --border: #363640; --border-strong: #4A4A56;
+  --text: #F4F3EF; --text-2: #C3C2CB; --text-3: #9B9AA5;
+  --focus: #6EB0FF; --scrim: rgba(0, 0, 0, .7);
+  --tex-ink: rgba(255, 255, 255, .045); --tex-light: rgba(255, 255, 255, .12);
+  --win: #4CC77E; --win-bg: #10301D; --loss: #FF7B72; --loss-bg: #3A1616;
+  --warn: #FFC857; --warn-bg: #33270A; --info: #6EB0FF; --info-bg: #132544;
+  --chem-neg-strong: #FF7B72; --chem-neg: #C9584D; --chem-neutral: #6A6975;
+  --chem-pos: #2E9E5E; --chem-pos-strong: #3DDC84;
+  --team-a-soft: #16263F; --team-a-line: #78A9FF;
+  --team-b-soft: #3A2110; --team-b-line: #FF9A55;
+  --team-c-soft: #2A1F3A; --team-c-line: #C9A6F2;
+  --team-d-soft: #0E2E2B; --team-d-line: #4FD1C0;
+  --tier-prov-1: #2F2F39; --tier-prov-2: #4A4A56; --on-prov: #C3C2CB;
+  --court: #2B4E63; --court-2: #244357; --court-line: #DCE6EE; --court-out: #15202A; --net: #F4F3EF;
+  --e-1: 0 0 0 1px #363640;
+  --e-2: 0 0 0 1px #363640, 0 10px 24px -8px rgba(0, 0, 0, .6);
+  --e-3: 0 24px 40px -10px rgba(0, 0, 0, .75);
+  --e-pop: 6px 6px 0 #D81B5C;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-lift: 0ms; --dur-drop: 120ms; --dur-swap: 120ms; --dur-score: 0ms; --dur-reveal: 150ms; --ease-settle: cubic-bezier(0, 0, .2, 1); }
+}
+</style>
+<style>/* ==========================================================
+   طائرة المراجيل — component reference CSS v2 (uses marajeel-tokens.css)
+   Everything is logical-property based: works in dir="rtl" and dir="ltr".
+   Tailwind: port these as @layer components or React components.
+   ========================================================== */
+
+/* ---------- Helpers ---------- */
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums lining-nums; direction: ltr; unicode-bidi: isolate; }
+.caps { font-family: var(--font-display); text-transform: uppercase; letter-spacing: var(--ls-caps); }
+[dir="rtl"] .flip-rtl { transform: scaleX(-1); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Textures (CSS only, no images) ---------- */
+.tx-concrete {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(var(--tex-ink) 1px, transparent 1.5px),
+    radial-gradient(var(--tex-ink) .8px, transparent 1.3px),
+    linear-gradient(118deg, transparent 0 58%, var(--tex-light) 58% 58.6%, transparent 58.6% 71%, var(--tex-light) 71% 71.3%, transparent 71.3%);
+  background-size: 9px 9px, 13px 13px, 100% 100%;
+  background-position: 0 0, 4px 7px, 0 0;
+}
+.tx-stripes { background-image: repeating-linear-gradient(-55deg, var(--tex-light) 0 2px, transparent 2px 11px); }
+.tx-halftone { position: relative; isolation: isolate; }
+.tx-halftone::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(currentColor 1.3px, transparent 1.6px); background-size: 8px 8px; opacity: .16;
+  -webkit-mask-image: linear-gradient(135deg, #000 0 20%, transparent 65%); mask-image: linear-gradient(135deg, #000 0 20%, transparent 65%);
+}
+[dir="rtl"] .tx-halftone::after { -webkit-mask-image: linear-gradient(-135deg, #000 0 20%, transparent 65%); mask-image: linear-gradient(-135deg, #000 0 20%, transparent 65%); }
+
+/* Brush swash: any element becomes a paint stroke in --swash colour */
+.swash {
+  display: block; background: var(--swash, var(--brand));
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'><path d='M6 34C40 18 90 12 150 12C220 11 300 8 392 4L396 14C330 20 300 24 240 26C300 28 350 30 380 34L372 44C300 40 220 40 150 44C100 47 50 52 12 56L2 48C30 44 60 40 90 38C60 38 30 38 6 34Z'/><circle cx='388' cy='46' r='3'/><circle cx='20' cy='20' r='2.5'/><circle cx='398' cy='28' r='1.6'/></svg>") center / 100% 100% no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'><path d='M6 34C40 18 90 12 150 12C220 11 300 8 392 4L396 14C330 20 300 24 240 26C300 28 350 30 380 34L372 44C300 40 220 40 150 44C100 47 50 52 12 56L2 48C30 44 60 40 90 38C60 38 30 38 6 34Z'/><circle cx='388' cy='46' r='3'/><circle cx='20' cy='20' r='2.5'/><circle cx='398' cy='28' r='1.6'/></svg>") center / 100% 100% no-repeat;
+}
+[dir="rtl"] .swash { transform: scaleX(-1); }
+
+/* Team patterns (colour-blind redundancy) — background-colour comes from the team token */
+.pat-a { background-image: radial-gradient(rgba(255,255,255,.24) 1.5px, transparent 1.8px); background-size: 8px 8px; }
+.pat-b { background-image: repeating-linear-gradient(45deg, rgba(18,18,24,.16) 0 3px, transparent 3px 9px); }
+.pat-c { background-image: repeating-linear-gradient(0deg, rgba(18,18,24,.14) 0 3px, transparent 3px 9px); }
+.pat-d { background-image: repeating-linear-gradient(45deg, rgba(18,18,24,.13) 0 2px, transparent 2px 8px), repeating-linear-gradient(-45deg, rgba(18,18,24,.13) 0 2px, transparent 2px 8px); }
+
+/* ---------- Tiers ---------- */
+.tier-gold   { --c1: var(--tier-gold-1);   --c2: var(--tier-gold-2);   --on: var(--on-gold); }
+.tier-silver { --c1: var(--tier-silver-1); --c2: var(--tier-silver-2); --on: var(--on-silver); }
+.tier-bronze { --c1: var(--tier-bronze-1); --c2: var(--tier-bronze-2); --on: var(--on-bronze); }
+.tier-mvp    { --c1: var(--tier-mvp-1);    --c2: var(--tier-mvp-2);    --on: var(--on-mvp); --frame: var(--volt); }
+.tier-prov   { --c1: var(--tier-prov-1);   --c2: var(--tier-prov-2);   --on: var(--on-prov); }
+.team-a { --team: var(--team-a); --on-team: var(--on-team-a); }
+.team-b { --team: var(--team-b); --on-team: var(--on-team-b); }
+.team-c { --team: var(--team-c); --on-team: var(--on-team-c); }
+.team-d { --team: var(--team-d); --on-team: var(--on-team-d); }
+.team-none { --team: #5E5D66; --on-team: #FFFFFF; }
+
+/* ---------- Player card · full (200 × 300) ---------- */
+.fut, .fut-in { clip-path: polygon(0 7%, 9% 0, 34% 0, 40% 2.6%, 60% 2.6%, 66% 0, 91% 0, 100% 7%, 100% 89%, 50% 100%, 0 89%); }
+.fut { width: 200px; height: 300px; padding: 3px; box-sizing: border-box; background: var(--frame, var(--c2)); transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.fut-in {
+  position: relative; height: 100%; color: var(--on); overflow: hidden;
+  background-color: var(--c1);
+  background-image:
+    linear-gradient(115deg, transparent 0 46%, rgba(255,255,255,.35) 46% 49%, transparent 49% 53%, rgba(255,255,255,.18) 53% 54%, transparent 54%),
+    repeating-linear-gradient(-55deg, rgba(255,255,255,.10) 0 2px, transparent 2px 9px),
+    linear-gradient(160deg, var(--c1) 10%, var(--c2) 100%);
+}
+.tier-mvp .fut-in { background-image: repeating-linear-gradient(-55deg, rgba(244,226,43,.10) 0 2px, transparent 2px 9px), linear-gradient(160deg, #2A2A33, #121218 70%), radial-gradient(circle at 80% 10%, rgba(216,27,92,.6), transparent 60%); }
+.fut-photo {
+  position: absolute; top: 20px; inset-inline-end: 12px; width: 120px; height: 130px;
+  background-color: var(--team); color: var(--on-team);
+  clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
+  display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+}
+[dir="rtl"] .fut-photo { clip-path: polygon(0 0, 84% 0, 100% 100%, 0 100%); }
+.fut-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }           /* real cut-out photo */
+.fut-ini { font-family: var(--font-display); font-weight: 800; font-size: 54px; line-height: 1; margin-bottom: 30px; }
+.fut-side { position: absolute; top: 26px; inset-inline-start: 14px; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fut-ovr { font-family: var(--font-num); font-weight: 800; font-size: 54px; line-height: .85; font-variant-numeric: tabular-nums; }
+.fut-pos { font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.1; text-align: center; }
+.fut-rule { width: 30px; height: 2px; background: currentColor; opacity: .45; }
+.fut-badge { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background-color: var(--team); color: var(--on-team); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.fut-name { position: absolute; top: 156px; inset-inline: 14px; text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1.1; padding-bottom: 5px; border-bottom: 1.5px solid currentColor; border-color: color-mix(in srgb, currentColor 35%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fut-stats { position: absolute; top: 192px; inset-inline: 20px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 3px; }
+.fut-stat { display: flex; align-items: baseline; gap: 6px; }
+.fut-stat b { font-family: var(--font-num); font-weight: 800; font-size: 19px; min-width: 24px; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+.fut-stat span { font-family: var(--font-ui); font-weight: 600; font-size: 12px; }
+.fut-ribbon { position: absolute; top: 120px; inset-inline: -8px; height: 26px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 15px; transform: skewY(-6deg); }
+.fut-check { position: absolute; top: 0; inset-inline-start: calc(50% - 15px); width: 30px; height: 22px; background: var(--brand); color: var(--on-brand); display: flex; align-items: center; justify-content: center; }
+
+/* states — on a wrapper (.cw), because clip-path would cut a shadow on the card itself */
+.cw { display: inline-block; position: relative; transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.cw.is-selected { --frame: var(--brand); filter: drop-shadow(0 6px 12px rgba(216,27,92,.5)); }
+.cw.is-dragging { transform: rotate(-3deg) scale(1.05); filter: drop-shadow(0 22px 18px rgba(18,18,24,.4)); z-index: 5; }
+.cw.is-benched .fut-in, .cw.is-benched .mini-in { filter: saturate(.25); }
+.cw.is-inactive { opacity: .5; filter: grayscale(1); }
+
+/* ---------- Mini card (72 × 92) ---------- */
+.mini, .mini-in { clip-path: polygon(0 8%, 12% 0, 88% 0, 100% 8%, 100% 86%, 50% 100%, 0 86%); }
+.mini { width: 72px; height: 92px; padding: 3px; box-sizing: border-box; background: var(--frame, var(--c2)); transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.mini-in { position: relative; height: 100%; background-color: var(--team); color: var(--on-team); }
+.mini-ovr { position: absolute; top: 5px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 800; font-size: 20px; line-height: 1; }
+.mini-zone { position: absolute; top: 25px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 700; font-size: 12px; opacity: .9; }
+.mini-ini { position: absolute; top: 14px; inset-inline-end: 6px; font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1; }
+.mini-name { position: absolute; top: 50px; inset-inline: 0; height: 20px; background: var(--ink); color: var(--on-ink); font-family: var(--font-display); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+[data-theme="dark"] .mini-name { background: #121218; color: #FFFFFF; }
+.slot { width: 72px; height: 92px; box-sizing: border-box; border: 2px dashed var(--border-strong); border-radius: 8px; }
+.slot.is-target { border-color: var(--brand); background: var(--brand-soft); }
+
+/* ---------- Tags, tabs, panels ---------- */
+.tag-new { position: absolute; top: 0; inset-inline-end: 0; height: 26px; padding-inline: 18px 10px; display: flex; align-items: center; background: var(--cyan); color: var(--on-cyan); font-family: var(--font-display); font-weight: 800; font-size: 14px; text-transform: uppercase; clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%); }
+[dir="rtl"] .tag-new { padding-inline: 10px 18px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); }
+.tabs { display: flex; background: var(--surface); box-shadow: var(--e-1); }
+.tab { flex: 1; height: 44px; border: 0; background: transparent; color: var(--text-2); font-family: var(--font-display); font-weight: 700; font-size: 17px; text-transform: uppercase; position: relative; }
+.tab[aria-selected="true"] { background: var(--cyan); color: var(--on-cyan); box-shadow: inset 0 -4px 0 var(--brand); }
+.panel { background: var(--surface); position: relative; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+[dir="rtl"] .panel { clip-path: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut)); }
+.panel-pink { background-color: var(--brand); color: var(--on-brand); }
+.title-xl { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-display); line-height: var(--lh-display); text-transform: uppercase; color: var(--brand-text); }
+
+/* ---------- Buttons ---------- */
+.btn { height: var(--tap); padding-inline: 20px; border: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: .02em; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition: transform var(--dur-press) var(--ease-standard); }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--brand); color: var(--on-brand); height: 56px; font-size: 20px; }
+.btn-ink { background: var(--ink); color: var(--on-ink); }
+.btn-outline { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 2px var(--text); }
+.btn-danger { background: var(--loss); color: #FFFFFF; }
+.btn[disabled] { background: var(--surface-3); color: var(--text-3); }
+
+/* ---------- Bottom nav ---------- */
+.bnav { display: grid; grid-template-columns: repeat(5, 1fr); height: var(--nav-h); background: #121218; color: #C3C2CB; padding-bottom: env(safe-area-inset-bottom); }
+.bnav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: inherit; text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 13px; position: relative; }
+.bnav a[aria-current="page"] { color: #FFFFFF; }
+.bnav a[aria-current="page"]::before { content: ""; position: absolute; inset: 8px 6px; background: var(--brand); transform: skewX(-10deg); z-index: 0; }
+.bnav a > * { position: relative; z-index: 1; }
+
+/* ---------- Loading ---------- */
+.skeleton { background: linear-gradient(90deg, var(--surface-2) 0 40%, var(--surface-3) 50%, var(--surface-2) 60% 100%); background-size: 300% 100%; animation: sk 1.4s linear infinite; }
+@keyframes sk { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } .fut, .mini { transition: none; } }
+</style>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* vietnamese */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3nWuZEC.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3jWuZEC.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("10450f6a-ba91-4f14-9f31-2a986a07426f") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3nWuZEC.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3jWuZEC.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("cf2f9d33-fa99-468a-ba80-4bed56bbe4f6") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B47b1z3nWuZEC.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B47b1z3jWuZEC.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("c05fc314-91f8-45b2-8030-90348f968cca") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("ec8daf1b-2f6c-49e8-9bc8-89de32f5fe4d") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/changa/v29/2-cm9JNi2YuVOUckaJy-au8.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("25dbc892-d816-4bb2-9c7e-367a7ac072d6") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("ec8daf1b-2f6c-49e8-9bc8-89de32f5fe4d") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/changa/v29/2-cm9JNi2YuVOUckaJy-au8.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("25dbc892-d816-4bb2-9c7e-367a7ac072d6") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("ec8daf1b-2f6c-49e8-9bc8-89de32f5fe4d") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/changa/v29/2-cm9JNi2YuVOUckaJy-au8.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("25dbc892-d816-4bb2-9c7e-367a7ac072d6") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ys43PWrfQ.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ysw3PWrfQ.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ysz3PWrfQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ys93PU.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CRXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CZXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CaXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CUXMQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCRXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCZXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCaXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCUXMQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCRXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCZXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCaXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCUXMQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+body{margin:0}
+a{color:#B0124A}a:hover{color:#121218}
+</style>
+</helmet>
+<div data-theme="light" dir="ltr" class="tx-concrete" style="width: 1440px; min-height: 2900px; box-sizing: border-box; padding: 64px; color: var(--text); font-family: var(--font-ui); display: flex; flex-direction: column; gap: 56px">
+  <div style="position: relative; display: flex; flex-direction: column; gap: 4px">
+    <span class="swash" style="position: absolute; top: 30px; left: -20px; width: 560px; height: 80px; --swash: var(--cyan)"></span>
+    <span style="position: relative; font-family: var(--font-display); font-weight: 800; color: var(--brand-text); font-size: 22px; letter-spacing: .06em">01 · TOKENS</span>
+    <h1 style="position: relative; margin: 0; font-family: var(--font-display); font-size: 84px; line-height: .95; font-weight: 800; text-transform: uppercase">Design tokens</h1>
+    <p style="position: relative; margin: 8px 0 0; font-size: 17px; color: var(--text-2); max-width: 860px; line-height: 1.6; font-weight: 500">Two files: <b>marajeel-tokens.css</b> (variables, light + dark) and <b>marajeel-components.css</b> (textures, card, tabs, buttons, nav — reference implementation). <code>data-theme="dark"</code> on any ancestor switches every token.</p>
+  </div>
+
+  <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+    <sc-for list="{{themes}}" as="th" hint-placeholder-count="2">
+      <div data-theme="{{th.id}}" class="tx-concrete panel" style="color: var(--text); padding: 28px; display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-family: var(--font-display); font-size: 34px; font-weight: 800; text-transform: uppercase">{{th.label}}</span>
+          <span style="font-size: 13px; font-weight: 600; color: var(--text-3)">{{th.note}}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+          <sc-for list="{{brand}}" as="s" hint-placeholder-count="5">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="height: 64px; background: var({{s.v}}); box-shadow: inset 0 0 0 1px var(--border); clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px)"></div>
+              <span style="font-size: 12px; font-weight: 700">{{s.v}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+          <sc-for list="{{neutrals}}" as="s" hint-placeholder-count="10">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <div style="height: 40px; background: var({{s.v}}); box-shadow: inset 0 0 0 1px var(--border)"></div>
+              <span style="font-size: 12px; font-weight: 700">{{s.v}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div dir="rtl" style="display: flex; gap: 8px; flex-wrap: wrap">
+          <span style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; background: var(--win-bg); color: var(--win); font-weight: 700; font-size: 14px">▲ فوز · Win</span>
+          <span style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; background: var(--loss-bg); color: var(--loss); font-weight: 700; font-size: 14px">▼ خسارة · Loss</span>
+          <span style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; background: var(--warn-bg); color: var(--warn); font-weight: 700; font-size: 14px">⟳ بانتظار المزامنة · Queued</span>
+          <span style="display: inline-flex; align-items: center; height: 32px; padding: 0 12px; background: var(--info-bg); color: var(--info); font-weight: 700; font-size: 14px">i مبدئي · Provisional</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{chem}}" as="c" hint-placeholder-count="5">
+            <div class="panel" style="display: flex; flex-direction: column; gap: 4px; align-items: center; padding: 10px 4px">
+              <svg width="70" height="14" sc-camel-view-box="0 0 70 14" aria-hidden="true"><line x1="4" y1="7" x2="66" y2="7" stroke="var({{c.v}})" stroke-width="{{c.w}}" stroke-dasharray="{{c.dash}}" stroke-linecap="round"></line></svg>
+              <span style="font-family: var(--font-num); font-weight: 800; font-size: 18px">{{c.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <h2 style="margin: 0; font-family: var(--font-display); font-size: 44px; font-weight: 800; text-transform: uppercase">Card tiers <span style="color: var(--brand-text)">· material = rating band</span></h2>
+    <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px">
+      <sc-for list="{{tiers}}" as="t" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div class="{{t.cls}}" style="height: 120px; padding: 3px; background: var(--frame, var(--c2)); clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 100%, 0 100%)">
+            <div class="fut-in" style="clip-path: polygon(0 10%, 10% 0, 90% 0, 100% 10%, 100% 100%, 0 100%); display: flex; align-items: center; justify-content: center">
+              <span style="font-family: var(--font-num); font-weight: 800; font-size: 56px">{{t.n}}</span>
+            </div>
+          </div>
+          <span style="font-family: var(--font-display); font-weight: 800; font-size: 20px; text-transform: uppercase">{{t.name}}</span>
+          <span style="font-size: 13px; color: var(--text-2); font-weight: 600; line-height: 1.5">{{t.rule}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <h2 style="margin: 0; font-family: var(--font-display); font-size: 44px; font-weight: 800; text-transform: uppercase">Team colors <span style="color: var(--brand-text)">· color + shape + pattern + name</span></h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px">
+      <sc-for list="{{teams}}" as="t" hint-placeholder-count="4">
+        <div class="panel" style="display: flex; flex-direction: column">
+          <div class="{{t.pat}}" dir="rtl" style="height: 120px; background-color: var({{t.v}}); color: var({{t.on}}); padding: 18px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start">
+            <span style="font-family: var(--font-display); font-weight: 800; font-size: 34px">{{t.ar}}</span>
+            <svg width="30" height="30" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{t.shape}}"></path></svg>
+          </div>
+          <div style="padding: 14px 18px; display: flex; flex-direction: column; gap: 6px">
+            <span style="font-family: var(--font-display); font-weight: 800; font-size: 20px; text-transform: uppercase">{{t.en}} · {{t.shapeName}} · {{t.patName}}</span>
+            <span style="font-size: 13px; color: var(--text-3); font-weight: 600">{{t.hex}} · text {{t.onHex}} · {{t.ratio}}</span>
+            <div data-theme="dark" style="background: var(--surface); padding: 10px 12px; display: flex; align-items: center; gap: 10px">
+              <span class="{{t.pat}}" style="width: 26px; height: 26px; background-color: var({{t.v}})"></span>
+              <span dir="rtl" style="color: var({{t.line}}); font-weight: 700; font-size: 15px">{{t.ar}} · dark line</span>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin: 0; font-size: 14px; color: var(--text-2); max-width: 980px; line-height: 1.6; font-weight: 500">Blue is the only dark fill (white text); Orange, Lilac and Teal are light fills with ink text — so lightness + pattern + shape separate any pair under protanopia, deuteranopia or greyscale. Teal is the spare.</p>
+  </section>
+
+  <section style="display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 40px">
+    <div style="display: flex; flex-direction: column; gap: 20px">
+      <h2 style="margin: 0; font-family: var(--font-display); font-size: 44px; font-weight: 800; text-transform: uppercase">Typography</h2>
+      <div dir="rtl" class="panel" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+        <span style="font-size: 13px; font-weight: 700; color: var(--text-3)">Changa 800 (عربي) + Barlow Condensed 800 (Latin) — one stack: --font-display</span>
+        <span style="font-family: var(--font-display); font-size: 60px; font-weight: 800; line-height: 1.05">نهائي الخميس <span style="color: var(--brand-text)">KICK OFF</span></span>
+        <span style="font-size: 13px; font-weight: 700; color: var(--text-3)">IBM Plex Sans Arabic — UI &amp; body (--font-ui)</span>
+        <p style="margin: 0; font-size: 18px; line-height: 1.7">سجّل نتيجة الشوط، اختر أفضل لاعب، وشارك الترتيب مع المجموعة. Record the set, pick the MVP, share the table.</p>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+          <div style="background: var(--ink); color: var(--on-ink); padding: 18px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 13px; font-weight: 700; opacity: .8">أرقام عربية · Arabic-Indic</span>
+            <span style="font-family: var(--font-num); font-size: 56px; font-weight: 800; line-height: 1; direction: ltr; text-align: right">١٥ – ١٢</span>
+            <span style="font-family: var(--font-num); font-size: 22px; font-weight: 700; direction: ltr; text-align: right">٠١٢٣٤٥٦٧٨٩</span>
+          </div>
+          <div style="background: var(--brand); color: var(--on-brand); padding: 18px; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 13px; font-weight: 700">أرقام غربية · Western (default)</span>
+            <span style="font-family: var(--font-num); font-size: 56px; font-weight: 800; line-height: 1; direction: ltr; text-align: right">15 – 12</span>
+            <span style="font-family: var(--font-num); font-size: 22px; font-weight: 700; direction: ltr; text-align: right">0123456789</span>
+          </div>
+        </div>
+        <p style="margin: 0; font-size: 14px; color: var(--text-2); line-height: 1.6">Barlow has no Arabic-Indic digits, so the stack falls back to Changa for ٠–٩ automatically. Numbers always use <code>.num</code> (tabular, LTR isolate). Latin display text is UPPERCASE; Arabic gets weight 800 instead of case.</p>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px">
+      <h2 style="margin: 0; font-family: var(--font-display); font-size: 44px; font-weight: 800; text-transform: uppercase">Type scale</h2>
+      <div class="panel" style="padding: 8px 28px; display: flex; flex-direction: column">
+        <sc-for list="{{scale}}" as="r" hint-placeholder-count="9">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--surface-2)">
+            <div style="display: flex; flex-direction: column; min-width: 150px">
+              <span style="font-weight: 700; font-size: 14px">{{r.token}}</span>
+              <span style="font-size: 12px; font-weight: 600; color: var(--text-3)">{{r.spec}}</span>
+            </div>
+            <span dir="rtl" style="font-family: {{r.font}}; font-size: {{r.px}}; font-weight: {{r.w}}; line-height: 1.15; white-space: nowrap">{{r.sample}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 800; text-transform: uppercase">Textures</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div class="tx-concrete" style="height: 110px; box-shadow: inset 0 0 0 1px var(--border); display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box; font-weight: 700; font-size: 13px">.tx-concrete</div>
+        <div class="tx-stripes" style="height: 110px; background-color: var(--brand); color: #FFFFFF; display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box; font-weight: 700; font-size: 13px">.tx-stripes</div>
+        <div class="tx-halftone" style="height: 110px; background: var(--cyan); color: #121218; display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box; font-weight: 700; font-size: 13px">.tx-halftone</div>
+        <div style="height: 110px; background: #121218; color: #FFFFFF; position: relative; display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box; font-weight: 700; font-size: 13px; overflow: hidden"><span class="swash" style="position: absolute; top: 24px; left: -10px; width: 240px; height: 44px; --swash: var(--brand)"></span><span style="position: relative">.swash (+ --swash)</span></div>
+      </div>
+      <p style="margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.6">All CSS gradients/masks, no bitmaps. Use only on frame areas — never under body text or numbers.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 800; text-transform: uppercase">Shape &amp; space</h2>
+      <div class="panel" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+        <sc-for list="{{space}}" as="s" hint-placeholder-count="10">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <span style="width: 64px; font-size: 13px; font-weight: 700">{{s.t}}</span>
+            <span style="height: 12px; background: var(--brand); transform: skewX(-10deg); width: {{s.px}}"></span>
+            <span style="font-size: 13px; color: var(--text-3); font-weight: 600">{{s.px}} {{s.use}}</span>
+          </div>
+        </sc-for>
+        <p style="margin: 6px 0 0; font-size: 13px; color: var(--text-2); line-height: 1.6">Corners are cut (--cut 14px on panels, 10px on buttons), not rounded. Radii 2–10px only for inputs and table cells; pills only for toggles. Slant = 10°, mirrored in RTL.</p>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 800; text-transform: uppercase">Elevation</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px">
+        <sc-for list="{{elev}}" as="e" hint-placeholder-count="4">
+          <div style="height: 100px; background: var(--surface); box-shadow: var({{e.v}}); padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end">
+            <span style="font-size: 14px; font-weight: 800">{{e.v}}</span>
+            <span style="font-size: 12px; color: var(--text-3); font-weight: 600">{{e.use}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 20px">
+    <h2 style="margin: 0; font-family: var(--font-display); font-size: 44px; font-weight: 800; text-transform: uppercase">Motion</h2>
+    <div class="panel" style="overflow: hidden">
+      <div style="display: grid; grid-template-columns: 160px 100px 200px minmax(0, 1fr); gap: 16px; padding: 12px 24px; background: var(--ink); color: var(--on-ink); font-family: var(--font-display); font-size: 16px; font-weight: 800; text-transform: uppercase">
+        <span>Token</span><span>Time</span><span>Easing</span><span>What moves</span>
+      </div>
+      <sc-for list="{{motion}}" as="m" hint-placeholder-count="9">
+        <div style="display: grid; grid-template-columns: 160px 100px 200px minmax(0, 1fr); gap: 16px; padding: 12px 24px; border-top: 1px solid var(--surface-2); font-size: 14px; align-items: center">
+          <span style="font-weight: 700">{{m.t}}</span>
+          <span style="font-family: var(--font-num); font-weight: 800; font-size: 17px">{{m.d}}</span>
+          <span style="color: var(--text-2); font-weight: 600">{{m.e}}</span>
+          <span style="color: var(--text-2)">{{m.what}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: var(--font-display); font-size: 44px; font-weight: 800; text-transform: uppercase">marajeel-tokens.css</h2>
+    <pre style="margin: 0; background: #121218; color: #E4E3EA; padding: 28px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; line-height: 1.6; white-space: pre-wrap; column-count: 2; column-gap: 40px; border-inline-start: 6px solid var(--brand)">{{css}}</pre>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:2900}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    fetch('/_blob/90a870c92d751d9f1209e0732925d001').then((r) => r.text()).then((css) => this.setState({ css })).catch(() => {});
+  }
+  renderVals() {
+    const tri = 'M12 3l10 18H2z', circ = 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20z', sq = 'M3 3h18v18H3z', dia = 'M12 1l11 11-11 11L1 12z';
+    return {
+      css: (this.state && this.state.css) || 'Loading marajeel-tokens.css…',
+      themes: [
+        { id: 'light', label: 'Light · day court', note: 'concrete wall, white panels' },
+        { id: 'dark', label: 'Dark · night court', note: 'asphalt, same accents' }
+      ],
+      brand: ['--brand', '--cyan', '--volt', '--ink', '--brand-soft'].map((v) => ({ v })),
+      neutrals: ['--bg', '--surface', '--surface-2', '--surface-3', '--border', '--border-strong', '--text', '--text-2', '--text-3', '--focus'].map((v) => ({ v })),
+      chem: [
+        { v: '--chem-neg-strong', w: 5, dash: '6 5', label: '−3' },
+        { v: '--chem-neg', w: 3.5, dash: '6 5', label: '−1' },
+        { v: '--chem-neutral', w: 2, dash: '2 5', label: '0' },
+        { v: '--chem-pos', w: 3.5, dash: '0', label: '+1' },
+        { v: '--chem-pos-strong', w: 5, dash: '0', label: '+3' }
+      ],
+      tiers: [
+        { cls: 'tier-gold', n: 82, name: 'Gold', rule: '75+ overall. Ink-brown text 8.9:1.' },
+        { cls: 'tier-silver', n: 71, name: 'Silver', rule: '65–74 overall.' },
+        { cls: 'tier-bronze', n: 61, name: 'Bronze', rule: 'Below 65.' },
+        { cls: 'tier-mvp', n: 88, name: 'MVP / In-form', rule: 'Last session’s MVP; volt frame + volt numbers on black. Lasts one week.' },
+        { cls: 'tier-prov', n: 64, name: 'Provisional', rule: 'Under 5 games: grey card + “مبدئي ٣/٥” ribbon. Flips to its tier at game 5.' }
+      ],
+      teams: [
+        { v: '--team-a', on: '--on-team-a', line: '--team-a-line', pat: 'pat-a', ar: 'الأزرق', en: 'Blue', shape: circ, shapeName: 'circle', patName: 'dots', hex: '#1F5FBF', onHex: '#FFF', ratio: '6.1:1' },
+        { v: '--team-b', on: '--on-team-b', line: '--team-b-line', pat: 'pat-b', ar: 'البرتقالي', en: 'Orange', shape: tri, shapeName: 'triangle', patName: 'stripes', hex: '#E0620F', onHex: '#121218', ratio: '5.1:1' },
+        { v: '--team-c', on: '--on-team-c', line: '--team-c-line', pat: 'pat-c', ar: 'البنفسجي', en: 'Lilac', shape: sq, shapeName: 'square', patName: 'bars', hex: '#A77BDB', onHex: '#121218', ratio: '5.7:1' },
+        { v: '--team-d', on: '--on-team-d', line: '--team-d-line', pat: 'pat-d', ar: 'الفيروزي', en: 'Teal (spare)', shape: dia, shapeName: 'diamond', patName: 'hatch', hex: '#2BB3A3', onHex: '#121218', ratio: '7.0:1' }
+      ],
+      scale: [
+        { token: '--fs-hero', spec: '64 / .95 · 800', font: 'var(--font-num)', px: '64px', w: 800, sample: '15' },
+        { token: '--fs-display', spec: '40 / 1.05 · 800 caps', font: 'var(--font-display)', px: '40px', w: 800, sample: 'ابنِ فريقك' },
+        { token: '--fs-h1', spec: '30 / 1.1 · 700', font: 'var(--font-display)', px: '30px', w: 700, sample: 'KICK OFF' },
+        { token: '--fs-h2', spec: '22 / 1.2 · 700', font: 'var(--font-display)', px: '22px', w: 700, sample: 'أفضل الزملاء' },
+        { token: '--fs-h3', spec: '17 / 1.4 · Plex 700', font: 'var(--font-ui)', px: '17px', w: 700, sample: 'الفريق الأزرق' },
+        { token: '--fs-body', spec: '16 / 1.6 · Plex 500', font: 'var(--font-ui)', px: '16px', w: 500, sample: 'اسحب اللاعب لتبديل المركز' },
+        { token: '--fs-small', spec: '14 / 1.55 · Plex 500', font: 'var(--font-ui)', px: '14px', w: 500, sample: '٢٤ مباراة · ٦٣٪ فوز' },
+        { token: '--fs-caption', spec: '12 · Plex 600 (floor)', font: 'var(--font-ui)', px: '12px', w: 600, sample: 'مبدئي — أقل من ٥ مباريات' }
+      ],
+      space: [['--sp-1', '4px', ''], ['--sp-2', '8px', ''], ['--sp-3', '12px', ''], ['--sp-4', '16px', 'gutter'], ['--sp-5', '20px', ''], ['--sp-6', '24px', ''], ['--sp-8', '32px', ''], ['--sp-12', '48px', 'tap'], ['--sp-16', '64px', '']].map(([t, px, use]) => ({ t, px, use })),
+      elev: [{ v: '--e-1', use: 'panels, rows' }, { v: '--e-2', use: 'sticky bars, toasts' }, { v: '--e-3', use: 'dragging, dialogs' }, { v: '--e-pop', use: 'hero CTA sticker' }],
+      motion: [
+        { t: '--dur-press', d: '80ms', e: 'standard', what: 'Button press: scale .97.' },
+        { t: '--dur-fast', d: '140ms', e: 'standard', what: 'Chips, toggles, tab block slide.' },
+        { t: '--dur-base', d: '200ms', e: 'standard', what: 'Selection frame, row highlight, banner.' },
+        { t: '--dur-lift', d: '120ms', e: 'out', what: 'Drag start: card 1.05, −3°, drop-shadow; origin becomes dashed slot.' },
+        { t: '--dur-drop', d: '220ms', e: 'settle', what: 'Drop into slot — the only overshoot (1.3).' },
+        { t: '--dur-swap', d: '260ms', e: 'standard', what: 'Displaced card travels to the empty slot (FLIP); team rating counts up/down.' },
+        { t: '--dur-score', d: '180ms', e: 'out', what: 'Score digit slides 10px and fades; direction follows + / −.' },
+        { t: '--dur-slow', d: '320ms', e: 'standard', what: 'Sheets, dialogs, winner frame, toast enter.' },
+        { t: '--dur-reveal', d: '600ms', e: 'standard', what: 'Provisional → tier card flip (rotateY) with a single sheen sweep. Once per player.' }
+      ]
+    };
+  }
+}
+</script>
+
+
+</body></html>

@@ -1,0 +1,60 @@
+# Decisions
+
+Judgment calls made while building, with the simplest reasonable interpretation chosen.
+
+## Group-specific (agreed with the organiser)
+
+- **Positions are court zones, one player each**: 1 right receiver, 2 right hitter, 3 setter, 4 left hitter,
+  5 left receiver, 6 libero. There's no rotation. This replaces the brief's S/OH/MB/OPP template. The template is the list of
+  zones each team fills, configurable in settings.
+- **Active players must be exactly teams × template size** (12 or 18 by default). Extra arrivals go to the
+  bench automatically (last arrivals first), and a long-press benches or un-benches anyone. Bench players are attached to a team and
+  can be subbed into any single game.
+- **Games are usually to 15.** The target and win-by-two are settings, used only as a soft "save anyway?" check.
+  Scores stay free-form (deuce results like 17–15 are fine). The server enforces only rule 4 (non-negative, no ties, below 100).
+- **All "enough games" thresholds are 5** (provisional, position, chemistry) and configurable.
+
+## Architecture
+
+- **Derived stats are computed on read**, not stored in snapshot tables. A full replay over a few hundred games
+  takes milliseconds, so there's nothing to keep in sync. The `from`/`to` window ("this month") limits counting stats
+  only; ratings always use the full history.
+- **The rating replay runs in C#; team rating, balancing and the dream team run in TypeScript.** Team rating has to update live
+  while you drag cards, so it lives in one TS function (`web/src/lib/teamRating.ts`) used by the court, the balancer
+  and the dream team. The API serves the per-player and per-pair numbers it needs.
+- **Photo uploads are proxied through the API** (the alternative was SAS URLs). The storage account stays private with no CORS setup, and photos are served via
+  `/api/photos/{id}-{version}` with immutable caching.
+- **The client encodes WebP**, falling back to JPEG where the browser can't encode WebP from a canvas (Safari). The server
+  accepts both and stores the detected content type.
+- **EF migrations run at API startup** (in the background). This is fine at this scale, and the deploy pipeline needs no DB access.
+- **TrueSkill is our own port**, about 100 lines with no dependency risk, rather than the unmaintained Moserware.Skills. For two teams the factor graph
+  has an exact closed form, and it's covered by tests.
+- **Local development uses LocalDB or Docker.** Docker needs WSL, which wasn't available on the dev machine.
+
+## Ratings & stats
+
+- **0–100 mapping**: `40 + 1.5·(μ − 3σ)`, clamped. See the README.
+- **Win probability from team ratings** (court/balancer): `Φ((n·Δ/1.5) / (√(2n)·√2·β))`, consistent with the display
+  mapping. For 6-a-side, +1 team-rating point ≈ 58 %.
+- **Chemistry is displayed ×20** ("rating points"), the same scale as the team-rating bonus. Lines on the court link only
+  adjacent teammates (row neighbours + same column, at most 7 per team), as in the court spec.
+- **Provisional players count as the group prior** (the mean rating of established players, or 60 when nobody is established yet) in
+  team rating, balancing and win probability, so new players don't drag a team's rating down.
+- **Streaks** are consecutive wins in chronological order. In a month window they only count games in that month.
+- **Session MVP** (on the sessions list, and the volt "MVP" card) is the player with the most game MVPs in that session.
+  Ties go to the higher rating.
+- **Simulated recovery**: with ~50 games per player, the rating μ correlates with the hidden true skill at
+  ρ ≈ 0.6. Balanced 6v6 games carry little information each, so this is expected. The test checks the average over 5 seeds is above 0.5.
+
+## UX
+
+- **Court geometry never mirrors in RTL.** It renders in a `dir="ltr"` box. On phones, team A (the first team) is at the bottom,
+  nearest the thumb.
+- **Interactions:** tap a player on the court to pick the MVP; drag (long-press 250 ms on touch) to swap; drag across the net
+  to swap teams for that game; drag from "sub in" to bring a bench or resting player in. In the team builder,
+  tap-then-tap also swaps, and a selected placed player can be locked to their team before auto-balancing.
+- **Offline**: game writes (create, edit, delete) are queued in IndexedDB and replayed on reconnect, on start, and every 30 s.
+  The server upserts by the client GUID, so replays are idempotent. If the server rejects a queued game (validation), it's dropped and
+  a toast explains why. Other writes (players, rosters, settings) need a connection.
+- **Display preferences** (language, digits, theme) are per device in localStorage. Group settings are in the DB and admin-only.
+- **Default next matchup** with 3 teams: the winner of the last game stays on against the team that rested.

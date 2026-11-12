@@ -1,0 +1,70 @@
+@import './tokens.css';
+@import './components.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    color: var(--text);
+    background-color: var(--bg);
+    min-height: 100dvh;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  input, select, textarea {
+    background: var(--surface-2);
+    border: var(--bw-hair) solid var(--border);
+    border-radius: var(--r-sm);
+    min-height: var(--tap);
+    padding-inline: 12px;
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 0; }
+}
+
+@layer components {
+  .page { padding-inline: var(--gutter); padding-block: 16px calc(var(--nav-h) + var(--action-bar-h) + 24px + env(safe-area-inset-bottom)); max-width: 1200px; margin-inline: auto; }
+  @media (min-width: 1024px) { .page { padding-bottom: calc(var(--action-bar-h) + 24px); } }
+  .action-bar {
+    position: fixed; inset-inline: 0; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); z-index: 30;
+    padding: 12px var(--gutter); display: flex; gap: 8px; justify-content: stretch;
+    background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+  }
+  .action-bar > * { flex: 1; }
+  @media (min-width: 1024px) { .action-bar { bottom: 0; inset-inline-start: 240px; } }
+  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding-inline: 10px; font-family: var(--font-display); font-weight: 700; font-size: 14px; background: var(--surface-2); color: var(--text-2); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+  .field-label { display: block; font-weight: 600; font-size: var(--fs-small); color: var(--text-2); margin-bottom: 4px; }
+  .seg { display: inline-flex; background: var(--surface-2); padding: 3px; gap: 3px; }
+  .seg > button { min-height: 40px; padding-inline: 14px; font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-2); background: transparent; border: 0; }
+  .seg > button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+  .h-title { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-h1); line-height: var(--lh-h1); }
+  .h-section { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-h2); line-height: var(--lh-h2); }
+  .card-panel { background: var(--surface); box-shadow: var(--e-1); }
+  .dnd-dragging { cursor: grabbing; touch-action: none; }
+}
+
+/* Score tick */
+@keyframes score-tick { from { transform: translateY(-30%); opacity: .2; } to { transform: none; opacity: 1; } }
+.score-tick { animation: score-tick var(--dur-score) var(--ease-out); }
+@keyframes toast-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.toast-in { animation: toast-in var(--dur-base) var(--ease-out); }
+@keyframes card-reveal { 0% { transform: rotateY(0); } 50% { transform: rotateY(90deg); } 100% { transform: rotateY(0); } }
+.card-reveal { animation: card-reveal var(--dur-reveal) var(--ease-standard); }
+@media (prefers-reduced-motion: reduce) { .score-tick, .toast-in, .card-reveal { animation: none; } }
+
+/* Card fit tweaks over the design reference CSS */
+.fut-ini { white-space: nowrap; font-size: 46px; }
+.fut-stats { top: 186px; row-gap: 0; }
+.fut-stat b { font-size: 18px; }
+.mini-ini { white-space: nowrap; }
+.action-bar .btn { padding-inline: 10px; font-size: 17px; white-space: nowrap; }
+.action-bar .btn-primary { font-size: 19px; }

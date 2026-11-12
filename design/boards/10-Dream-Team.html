@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head>
+<meta charset="utf-8">
+<title>فريق الأحلام</title>
+<script src="534a5930-6024-4b0a-88c8-557a450bbe14"></script>
+<style>/* ==========================================================
+   طائرة المراجيل · Al-Marajeel Volleyball — design tokens v2
+   "Street-sport" direction: concrete textures, brush swashes,
+   slanted panels, condensed type, FUT-style collectible cards.
+   Light is default; data-theme="dark" on any ancestor = night court.
+   Map 1:1 into tailwind.config theme.extend.
+   Fonts (Google): Barlow Condensed 600/700/800 · Changa 500/700/800 ·
+                   IBM Plex Sans Arabic 400/500/600/700
+   ========================================================== */
+
+:root, [data-theme="light"] {
+  /* ---- Brand ---- */
+  --brand: #D81B5C;          /* Marajeel pink: primary actions, active tab, titles */
+  --brand-strong: #B0124A;   /* pressed */
+  --brand-soft: #FFE1EB;     /* tints, selected rows */
+  --brand-text: #B0124A;     /* pink text on light · 7.0:1 */
+  --on-brand: #FFFFFF;       /* 5.0:1 on --brand (use ≥16px bold) */
+  --cyan: #22D3E6;           /* secondary accent: active tab block, NEW tags, swashes */
+  --cyan-text: #00707C;      /* cyan as text on light · 5.6:1 */
+  --on-cyan: #121218;        /* 10.6:1 */
+  --volt: #F4E22B;           /* MVP, streaks, "in form" — fills only, ink text */
+  --on-volt: #121218;        /* 14.2:1 */
+  --ink: #121218;            /* secondary solid fill, nav bar, dark panels */
+  --on-ink: #FFFFFF;
+
+  /* ---- Surfaces & text (concrete) ---- */
+  --bg: #E7E6E1;             /* concrete wall — always with .tx-concrete */
+  --surface: #FFFFFF;        /* panels, cards, sheets */
+  --surface-2: #F2F1ED;      /* inputs, tracks, table header */
+  --surface-3: #E2E0DA;      /* skeleton shimmer, pressed */
+  --border: #CFCDC6;
+  --border-strong: #A9A69E;
+  --text: #121218;           /* 18.6:1 on surface */
+  --text-2: #45444E;         /* 9.6:1 */
+  --text-3: #5E5D66;         /* 6.5:1 — lowest allowed for text */
+  --focus: #0B6BD6;
+  --scrim: rgba(18, 18, 24, .6);
+  --tex-ink: rgba(18, 18, 24, .07);   /* speckle / halftone ink on light */
+  --tex-light: rgba(255, 255, 255, .22);
+
+  /* ---- Semantic ---- */
+  --win: #13773C;   --win-bg: #DDF3E5;
+  --loss: #BE2A2A;  --loss-bg: #FBE3E3;
+  --warn: #8A5800;  --warn-bg: #FFF0C7;
+  --info: #0B6BD6;  --info-bg: #E2EEFD;
+
+  /* ---- Chemistry (+ weight + dash; negative is always dashed) ---- */
+  --chem-neg-strong: #BE2A2A; --chem-neg: #E06B5F; --chem-neutral: #9A98A2;
+  --chem-pos: #3FA668; --chem-pos-strong: #12804A;
+
+  /* ---- Teams: fill · tint · line/text · text-on-fill ----
+     A أزرق Blue ● dots · B برتقالي Orange ▲ stripes ·
+     C بنفسجي Lilac ■ bars · D فيروزي Teal ◆ crosshatch (spare) */
+  --team-a: #1F5FBF; --team-a-soft: #E1EAF9; --team-a-line: #1F5FBF; --on-team-a: #FFFFFF;
+  --team-b: #E0620F; --team-b-soft: #FDE8D8; --team-b-line: #B44A06; --on-team-b: #121218;
+  --team-c: #A77BDB; --team-c-soft: #F0E8FB; --team-c-line: #6B3FA0; --on-team-c: #121218;
+  --team-d: #2BB3A3; --team-d-soft: #DCF4F1; --team-d-line: #0F766E; --on-team-d: #121218;
+
+  /* ---- Card tiers (FUT-style material, by overall rating) ---- */
+  --tier-gold-1: #F6DC8A;   --tier-gold-2: #C9972B;   --on-gold: #2E2104;     /* 75+ */
+  --tier-silver-1: #ECEEF1; --tier-silver-2: #9DA3AC; --on-silver: #1E2126;   /* 65–74 */
+  --tier-bronze-1: #EBB58A; --tier-bronze-2: #A3602F; --on-bronze: #2A1505;   /* < 65 */
+  --tier-mvp-1: #1B1B22;    --tier-mvp-2: #121218;    --on-mvp: #F4E22B;      /* session MVP / in-form */
+  --tier-prov-1: #F2F1ED;   --tier-prov-2: #CFCDC6;   --on-prov: #45444E;     /* < 5 games */
+
+  /* ---- Court ---- */
+  --court: #F0A65E; --court-2: #E8964A; --court-line: #FFFFFF; --court-out: #3A7D8C; --net: #121218;
+
+  /* ---- Typography ---- */
+  --font-display: "Barlow Condensed", "Changa", sans-serif;   /* Latin → Barlow, Arabic → Changa */
+  --font-num: "Barlow Condensed", "Changa", sans-serif;       /* + tabular-nums */
+  --font-ui: "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif;
+  --fs-hero: 64px;    --lh-hero: .95;   /* score, card rating · 800 */
+  --fs-display: 40px; --lh-display: 1.05;/* screen hero titles · 800, Latin UPPERCASE */
+  --fs-h1: 30px;      --lh-h1: 1.1;     /* tile titles · 700 */
+  --fs-h2: 22px;      --lh-h2: 1.2;     /* section titles · 700 */
+  --fs-h3: 17px;      --lh-h3: 1.4;     /* list titles · Plex 700 */
+  --fs-body: 16px;    --lh-body: 1.6;   /* Plex 400–500 */
+  --fs-small: 14px;   --lh-small: 1.55; /* Plex 500 */
+  --fs-caption: 12px; --lh-caption: 1.4;/* floor · Plex 600 / Barlow 700 uppercase +.06em */
+  --ls-caps: .04em;
+
+  /* ---- Spacing & targets ---- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
+  --tap-min: 44px; --tap: 48px; --tap-xl: 112px;
+  --nav-h: 68px; --action-bar-h: 80px; --gutter: 16px;
+
+  /* ---- Shape: mostly sharp, cut corners, slants ---- */
+  --r-xs: 2px; --r-sm: 4px; --r-md: 6px; --r-lg: 10px; --r-pill: 999px;
+  --cut: 14px;          /* corner cut on panels/buttons */
+  --slant: 10deg;       /* skew for tabs, tags, swashes */
+  --bw-hair: 1px; --bw-strong: 2px; --bw-ring: 3px;
+
+  /* ---- Elevation: hard, offset, poster-like ---- */
+  --e-1: 0 2px 0 rgba(18, 18, 24, .10), 0 1px 3px rgba(18, 18, 24, .10);
+  --e-2: 0 10px 24px -8px rgba(18, 18, 24, .28);
+  --e-3: 0 24px 40px -12px rgba(18, 18, 24, .45);  /* dragging (use filter: drop-shadow on clipped cards) */
+  --e-pop: 6px 6px 0 #121218;                       /* sticker offset for hero CTAs */
+
+  /* ---- Motion ---- */
+  --dur-press: 80ms; --dur-fast: 140ms; --dur-base: 200ms; --dur-slow: 320ms;
+  --dur-lift: 120ms; --dur-drop: 220ms; --dur-swap: 260ms; --dur-score: 180ms;
+  --dur-reveal: 600ms;  /* card flip when a provisional player reaches 5 games — the one showpiece */
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0, 0, .2, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-settle: cubic-bezier(.34, 1.3, .64, 1);
+}
+
+[data-theme="dark"] {
+  --brand-soft: #3A1323; --brand-text: #FF6A9C;
+  --cyan-text: #4FE3F2;
+  --ink: #F4F3EF; --on-ink: #121218;
+  --bg: #111116; --surface: #1C1C23; --surface-2: #25252E; --surface-3: #2F2F39;
+  --border: #363640; --border-strong: #4A4A56;
+  --text: #F4F3EF; --text-2: #C3C2CB; --text-3: #9B9AA5;
+  --focus: #6EB0FF; --scrim: rgba(0, 0, 0, .7);
+  --tex-ink: rgba(255, 255, 255, .045); --tex-light: rgba(255, 255, 255, .12);
+  --win: #4CC77E; --win-bg: #10301D; --loss: #FF7B72; --loss-bg: #3A1616;
+  --warn: #FFC857; --warn-bg: #33270A; --info: #6EB0FF; --info-bg: #132544;
+  --chem-neg-strong: #FF7B72; --chem-neg: #C9584D; --chem-neutral: #6A6975;
+  --chem-pos: #2E9E5E; --chem-pos-strong: #3DDC84;
+  --team-a-soft: #16263F; --team-a-line: #78A9FF;
+  --team-b-soft: #3A2110; --team-b-line: #FF9A55;
+  --team-c-soft: #2A1F3A; --team-c-line: #C9A6F2;
+  --team-d-soft: #0E2E2B; --team-d-line: #4FD1C0;
+  --tier-prov-1: #2F2F39; --tier-prov-2: #4A4A56; --on-prov: #C3C2CB;
+  --court: #2B4E63; --court-2: #244357; --court-line: #DCE6EE; --court-out: #15202A; --net: #F4F3EF;
+  --e-1: 0 0 0 1px #363640;
+  --e-2: 0 0 0 1px #363640, 0 10px 24px -8px rgba(0, 0, 0, .6);
+  --e-3: 0 24px 40px -10px rgba(0, 0, 0, .75);
+  --e-pop: 6px 6px 0 #D81B5C;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-lift: 0ms; --dur-drop: 120ms; --dur-swap: 120ms; --dur-score: 0ms; --dur-reveal: 150ms; --ease-settle: cubic-bezier(0, 0, .2, 1); }
+}
+</style>
+<style>/* ==========================================================
+   طائرة المراجيل — component reference CSS v2 (uses marajeel-tokens.css)
+   Everything is logical-property based: works in dir="rtl" and dir="ltr".
+   Tailwind: port these as @layer components or React components.
+   ========================================================== */
+
+/* ---------- Helpers ---------- */
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums lining-nums; direction: ltr; unicode-bidi: isolate; }
+.caps { font-family: var(--font-display); text-transform: uppercase; letter-spacing: var(--ls-caps); }
+[dir="rtl"] .flip-rtl { transform: scaleX(-1); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Textures (CSS only, no images) ---------- */
+.tx-concrete {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(var(--tex-ink) 1px, transparent 1.5px),
+    radial-gradient(var(--tex-ink) .8px, transparent 1.3px),
+    linear-gradient(118deg, transparent 0 58%, var(--tex-light) 58% 58.6%, transparent 58.6% 71%, var(--tex-light) 71% 71.3%, transparent 71.3%);
+  background-size: 9px 9px, 13px 13px, 100% 100%;
+  background-position: 0 0, 4px 7px, 0 0;
+}
+.tx-stripes { background-image: repeating-linear-gradient(-55deg, var(--tex-light) 0 2px, transparent 2px 11px); }
+.tx-halftone { position: relative; isolation: isolate; }
+.tx-halftone::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(currentColor 1.3px, transparent 1.6px); background-size: 8px 8px; opacity: .16;
+  -webkit-mask-image: linear-gradient(135deg, #000 0 20%, transparent 65%); mask-image: linear-gradient(135deg, #000 0 20%, transparent 65%);
+}
+[dir="rtl"] .tx-halftone::after { -webkit-mask-image: linear-gradient(-135deg, #000 0 20%, transparent 65%); mask-image: linear-gradient(-135deg, #000 0 20%, transparent 65%); }
+
+/* Brush swash: any element becomes a paint stroke in --swash colour */
+.swash {
+  display: block; background: var(--swash, var(--brand));
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'><path d='M6 34C40 18 90 12 150 12C220 11 300 8 392 4L396 14C330 20 300 24 240 26C300 28 350 30 380 34L372 44C300 40 220 40 150 44C100 47 50 52 12 56L2 48C30 44 60 40 90 38C60 38 30 38 6 34Z'/><circle cx='388' cy='46' r='3'/><circle cx='20' cy='20' r='2.5'/><circle cx='398' cy='28' r='1.6'/></svg>") center / 100% 100% no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'><path d='M6 34C40 18 90 12 150 12C220 11 300 8 392 4L396 14C330 20 300 24 240 26C300 28 350 30 380 34L372 44C300 40 220 40 150 44C100 47 50 52 12 56L2 48C30 44 60 40 90 38C60 38 30 38 6 34Z'/><circle cx='388' cy='46' r='3'/><circle cx='20' cy='20' r='2.5'/><circle cx='398' cy='28' r='1.6'/></svg>") center / 100% 100% no-repeat;
+}
+[dir="rtl"] .swash { transform: scaleX(-1); }
+
+/* Team patterns (colour-blind redundancy) — background-colour comes from the team token */
+.pat-a { background-image: radial-gradient(rgba(255,255,255,.24) 1.5px, transparent 1.8px); background-size: 8px 8px; }
+.pat-b { background-image: repeating-linear-gradient(45deg, rgba(18,18,24,.16) 0 3px, transparent 3px 9px); }
+.pat-c { background-image: repeating-linear-gradient(0deg, rgba(18,18,24,.14) 0 3px, transparent 3px 9px); }
+.pat-d { background-image: repeating-linear-gradient(45deg, rgba(18,18,24,.13) 0 2px, transparent 2px 8px), repeating-linear-gradient(-45deg, rgba(18,18,24,.13) 0 2px, transparent 2px 8px); }
+
+/* ---------- Tiers ---------- */
+.tier-gold   { --c1: var(--tier-gold-1);   --c2: var(--tier-gold-2);   --on: var(--on-gold); }
+.tier-silver { --c1: var(--tier-silver-1); --c2: var(--tier-silver-2); --on: var(--on-silver); }
+.tier-bronze { --c1: var(--tier-bronze-1); --c2: var(--tier-bronze-2); --on: var(--on-bronze); }
+.tier-mvp    { --c1: var(--tier-mvp-1);    --c2: var(--tier-mvp-2);    --on: var(--on-mvp); --frame: var(--volt); }
+.tier-prov   { --c1: var(--tier-prov-1);   --c2: var(--tier-prov-2);   --on: var(--on-prov); }
+.team-a { --team: var(--team-a); --on-team: var(--on-team-a); }
+.team-b { --team: var(--team-b); --on-team: var(--on-team-b); }
+.team-c { --team: var(--team-c); --on-team: var(--on-team-c); }
+.team-d { --team: var(--team-d); --on-team: var(--on-team-d); }
+.team-none { --team: #5E5D66; --on-team: #FFFFFF; }
+
+/* ---------- Player card · full (200 × 300) ---------- */
+.fut, .fut-in { clip-path: polygon(0 7%, 9% 0, 34% 0, 40% 2.6%, 60% 2.6%, 66% 0, 91% 0, 100% 7%, 100% 89%, 50% 100%, 0 89%); }
+.fut { width: 200px; height: 300px; padding: 3px; box-sizing: border-box; background: var(--frame, var(--c2)); transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.fut-in {
+  position: relative; height: 100%; color: var(--on); overflow: hidden;
+  background-color: var(--c1);
+  background-image:
+    linear-gradient(115deg, transparent 0 46%, rgba(255,255,255,.35) 46% 49%, transparent 49% 53%, rgba(255,255,255,.18) 53% 54%, transparent 54%),
+    repeating-linear-gradient(-55deg, rgba(255,255,255,.10) 0 2px, transparent 2px 9px),
+    linear-gradient(160deg, var(--c1) 10%, var(--c2) 100%);
+}
+.tier-mvp .fut-in { background-image: repeating-linear-gradient(-55deg, rgba(244,226,43,.10) 0 2px, transparent 2px 9px), linear-gradient(160deg, #2A2A33, #121218 70%), radial-gradient(circle at 80% 10%, rgba(216,27,92,.6), transparent 60%); }
+.fut-photo {
+  position: absolute; top: 20px; inset-inline-end: 12px; width: 120px; height: 130px;
+  background-color: var(--team); color: var(--on-team);
+  clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
+  display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+}
+[dir="rtl"] .fut-photo { clip-path: polygon(0 0, 84% 0, 100% 100%, 0 100%); }
+.fut-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }           /* real cut-out photo */
+.fut-ini { font-family: var(--font-display); font-weight: 800; font-size: 54px; line-height: 1; margin-bottom: 30px; }
+.fut-side { position: absolute; top: 26px; inset-inline-start: 14px; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fut-ovr { font-family: var(--font-num); font-weight: 800; font-size: 54px; line-height: .85; font-variant-numeric: tabular-nums; }
+.fut-pos { font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.1; text-align: center; }
+.fut-rule { width: 30px; height: 2px; background: currentColor; opacity: .45; }
+.fut-badge { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background-color: var(--team); color: var(--on-team); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.fut-name { position: absolute; top: 156px; inset-inline: 14px; text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1.1; padding-bottom: 5px; border-bottom: 1.5px solid currentColor; border-color: color-mix(in srgb, currentColor 35%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fut-stats { position: absolute; top: 192px; inset-inline: 20px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 3px; }
+.fut-stat { display: flex; align-items: baseline; gap: 6px; }
+.fut-stat b { font-family: var(--font-num); font-weight: 800; font-size: 19px; min-width: 24px; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+.fut-stat span { font-family: var(--font-ui); font-weight: 600; font-size: 12px; }
+.fut-ribbon { position: absolute; top: 120px; inset-inline: -8px; height: 26px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 15px; transform: skewY(-6deg); }
+.fut-check { position: absolute; top: 0; inset-inline-start: calc(50% - 15px); width: 30px; height: 22px; background: var(--brand); color: var(--on-brand); display: flex; align-items: center; justify-content: center; }
+
+/* states — on a wrapper (.cw), because clip-path would cut a shadow on the card itself */
+.cw { display: inline-block; position: relative; transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.cw.is-selected { --frame: var(--brand); filter: drop-shadow(0 6px 12px rgba(216,27,92,.5)); }
+.cw.is-dragging { transform: rotate(-3deg) scale(1.05); filter: drop-shadow(0 22px 18px rgba(18,18,24,.4)); z-index: 5; }
+.cw.is-benched .fut-in, .cw.is-benched .mini-in { filter: saturate(.25); }
+.cw.is-inactive { opacity: .5; filter: grayscale(1); }
+
+/* ---------- Mini card (72 × 92) ---------- */
+.mini, .mini-in { clip-path: polygon(0 8%, 12% 0, 88% 0, 100% 8%, 100% 86%, 50% 100%, 0 86%); }
+.mini { width: 72px; height: 92px; padding: 3px; box-sizing: border-box; background: var(--frame, var(--c2)); transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.mini-in { position: relative; height: 100%; background-color: var(--team); color: var(--on-team); }
+.mini-ovr { position: absolute; top: 5px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 800; font-size: 20px; line-height: 1; }
+.mini-zone { position: absolute; top: 25px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 700; font-size: 12px; opacity: .9; }
+.mini-ini { position: absolute; top: 14px; inset-inline-end: 6px; font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1; }
+.mini-name { position: absolute; top: 50px; inset-inline: 0; height: 20px; background: var(--ink); color: var(--on-ink); font-family: var(--font-display); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+[data-theme="dark"] .mini-name { background: #121218; color: #FFFFFF; }
+.slot { width: 72px; height: 92px; box-sizing: border-box; border: 2px dashed var(--border-strong); border-radius: 8px; }
+.slot.is-target { border-color: var(--brand); background: var(--brand-soft); }
+
+/* ---------- Tags, tabs, panels ---------- */
+.tag-new { position: absolute; top: 0; inset-inline-end: 0; height: 26px; padding-inline: 18px 10px; display: flex; align-items: center; background: var(--cyan); color: var(--on-cyan); font-family: var(--font-display); font-weight: 800; font-size: 14px; text-transform: uppercase; clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%); }
+[dir="rtl"] .tag-new { padding-inline: 10px 18px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); }
+.tabs { display: flex; background: var(--surface); box-shadow: var(--e-1); }
+.tab { flex: 1; height: 44px; border: 0; background: transparent; color: var(--text-2); font-family: var(--font-display); font-weight: 700; font-size: 17px; text-transform: uppercase; position: relative; }
+.tab[aria-selected="true"] { background: var(--cyan); color: var(--on-cyan); box-shadow: inset 0 -4px 0 var(--brand); }
+.panel { background: var(--surface); position: relative; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+[dir="rtl"] .panel { clip-path: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut)); }
+.panel-pink { background-color: var(--brand); color: var(--on-brand); }
+.title-xl { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-display); line-height: var(--lh-display); text-transform: uppercase; color: var(--brand-text); }
+
+/* ---------- Buttons ---------- */
+.btn { height: var(--tap); padding-inline: 20px; border: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: .02em; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition: transform var(--dur-press) var(--ease-standard); }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--brand); color: var(--on-brand); height: 56px; font-size: 20px; }
+.btn-ink { background: var(--ink); color: var(--on-ink); }
+.btn-outline { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 2px var(--text); }
+.btn-danger { background: var(--loss); color: #FFFFFF; }
+.btn[disabled] { background: var(--surface-3); color: var(--text-3); }
+
+/* ---------- Bottom nav ---------- */
+.bnav { display: grid; grid-template-columns: repeat(5, 1fr); height: var(--nav-h); background: #121218; color: #C3C2CB; padding-bottom: env(safe-area-inset-bottom); }
+.bnav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: inherit; text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 13px; position: relative; }
+.bnav a[aria-current="page"] { color: #FFFFFF; }
+.bnav a[aria-current="page"]::before { content: ""; position: absolute; inset: 8px 6px; background: var(--brand); transform: skewX(-10deg); z-index: 0; }
+.bnav a > * { position: relative; z-index: 1; }
+
+/* ---------- Loading ---------- */
+.skeleton { background: linear-gradient(90deg, var(--surface-2) 0 40%, var(--surface-3) 50%, var(--surface-2) 60% 100%); background-size: 300% 100%; animation: sk 1.4s linear infinite; }
+@keyframes sk { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } .fut, .mini { transition: none; } }
+</style>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* vietnamese */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3nWuZEC.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3jWuZEC.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("3247f67c-f0ab-442d-b30c-cf97fe29ae75") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3nWuZEC.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3jWuZEC.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("db0be39f-c8c5-4869-820f-ced6525a7d87") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B47b1z3nWuZEC.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B47b1z3jWuZEC.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("f8b629ef-e6ef-4ae9-a467-7e79f7081108") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("1bebae72-2670-4bdd-96a6-9c73c6f9f607") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/changa/v29/2-cm9JNi2YuVOUckaJy-au8.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("c00b4261-7a86-402b-8a0e-5164d7b4c0c9") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("1bebae72-2670-4bdd-96a6-9c73c6f9f607") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/changa/v29/2-cm9JNi2YuVOUckaJy-au8.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("c00b4261-7a86-402b-8a0e-5164d7b4c0c9") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("1bebae72-2670-4bdd-96a6-9c73c6f9f607") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/changa/v29/2-cm9JNi2YuVOUckaJy-au8.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Changa';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("c00b4261-7a86-402b-8a0e-5164d7b4c0c9") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ys43PWrfQ.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ysw3PWrfQ.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ysz3PWrfQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3CZRtWPQCuHme67tEYUIx3Kh0PHR9N6Ys93PU.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CRXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CZXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CaXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPO_-CUXMQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCRXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCZXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCaXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YPi-OCUXMQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCRXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCZXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCaXMR5Kw.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ibmplexsansarabic/v15/Qw3NZRtWPQCuHme67tEYUIx3Kh0PHR9N6YOG-eCUXMQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+body{margin:0}
+a{color:#B0124A}a:hover{color:#121218}
+</style>
+</helmet>
+<div data-theme="{{theme}}" dir="rtl" class="tx-concrete" style="position: relative; width: 390px; height: 844px; overflow: hidden; color: var(--text); font-family: var(--font-ui)">
+  <header style="height: 52px; display: flex; align-items: center; padding: 0 16px; background: #121218; color: #FFFFFF">
+    <span style="font-family: var(--font-display); font-weight: 800; font-size: 24px; flex: 1">فريق الأحلام</span>
+    <span style="font-size: 12px; font-weight: 600; color: #C3C2CB">يُحدَّث بعد كل جلسة</span>
+  </header>
+
+  <div class="tx-stripes" style="position: relative; margin: 12px 16px 0; height: 108px; background-color: var(--brand); color: #FFFFFF; overflow: hidden; display: flex; align-items: stretch">
+    <span class="swash" style="position: absolute; bottom: 6px; inset-inline-start: -30px; width: 230px; height: 46px; --swash: var(--cyan)"></span>
+    <div style="position: relative; flex: 1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between">
+      <span style="font-family: var(--font-display); font-weight: 800; font-size: 32px; line-height: 1">أفضل ستة</span>
+      <span style="font-size: 13px; font-weight: 700">نوفمبر · حسب تقييم المركز + الكيمياء</span>
+    </div>
+    <div style="position: relative; width: 84px; background: #121218; display: flex; flex-direction: column; align-items: center; justify-content: center; clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%)">
+      <span class="num" style="font-weight: 800; font-size: 46px; line-height: .95; color: var(--volt)">84</span>
+      <span style="font-size: 12px; font-weight: 700">تقييم</span>
+      <span class="num" style="font-size: 14px; font-weight: 800; color: var(--chem-pos-strong)">+14</span>
+    </div>
+  </div>
+
+  <div dir="ltr" style="position: relative; margin: 12px 16px 0; width: 358px; height: 404px; background: var(--court)">
+    <span style="position: absolute; left: 0; right: 0; top: 0; height: 134px; background: var(--court-2)"></span>
+    <span style="position: absolute; inset: 0; box-shadow: inset 0 0 0 3px var(--court-line)"></span>
+    <span style="position: absolute; left: 0; right: 0; top: 134px; height: 3px; background: var(--court-line)"></span>
+    <span style="position: absolute; left: -6px; right: -6px; top: -3px; height: 7px; background: var(--net)"></span>
+    <span style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-weight: 800; font-size: 12px; letter-spacing: .1em; color: var(--net); opacity: .7">NET · الشبكة</span>
+    <svg width="358" height="404" sc-camel-view-box="0 0 358 404" style="position: absolute; inset: 0" aria-hidden="true">
+      <sc-for list="{{lines}}" as="l" hint-placeholder-count="7">
+        <line x1="{{l.x1}}" y1="{{l.y1}}" x2="{{l.x2}}" y2="{{l.y2}}" stroke="#121218" stroke-width="{{l.halo}}" stroke-linecap="round" opacity=".25" stroke-dasharray="{{l.d}}"></line>
+        <line x1="{{l.x1}}" y1="{{l.y1}}" x2="{{l.x2}}" y2="{{l.y2}}" stroke="{{l.c}}" stroke-width="{{l.w}}" stroke-linecap="round" stroke-dasharray="{{l.d}}"></line>
+      </sc-for>
+    </svg>
+    <sc-for list="{{chemTags}}" as="t" hint-placeholder-count="7">
+      <span class="num" style="position: absolute; left: {{t.left}}; top: {{t.top}}; height: 20px; padding: 0 5px; background: #121218; color: {{t.c}}; font-weight: 800; font-size: 14px; display: flex; align-items: center">{{t.v}}</span>
+    </sc-for>
+    <sc-for list="{{six}}" as="p" hint-placeholder-count="6">
+      <a href="Screen-PlayerDetail.dc.html" class="cw" style="position: absolute; left: {{p.left}}; top: {{p.top}}; text-decoration: none" aria-label="{{p.aria}}">
+        <span class="mini {{p.tier}} team-none" style="display: block">
+          <span class="mini-in" dir="rtl" style="display: block"><span class="mini-ovr">{{p.ovr}}</span><span class="mini-zone">{{p.zone}}</span><span class="mini-ini">{{p.ini}}</span><span class="mini-name">{{p.name}}</span></span>
+        </span>
+      </a>
+    </sc-for>
+  </div>
+
+  <div style="margin: 10px 16px 0; display: flex; gap: 8px; align-items: center">
+    <button type="button" aria-pressed="true" style="height: 36px; padding: 0 12px; border: 0; background: var(--cyan); color: var(--on-cyan); font: inherit; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; transform: skewX(-10deg)"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>خطوط الكيمياء</button>
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-2)">سميك متصل = انسجام · متقطع = ضعيف</span>
+  </div>
+
+  <div style="position: absolute; bottom: 68px; inset-inline: 0; padding: 12px 16px; display: flex; gap: 8px; background: linear-gradient(to top, var(--bg) 72%, transparent)">
+    <button type="button" class="btn btn-outline" style="flex: 1">هذا الشهر ▾</button>
+    <button type="button" class="btn btn-primary" style="flex: 1.4; height: 48px"><svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"></path></svg>مشاركة الصورة</button>
+  </div>
+  <nav class="bnav" aria-label="التنقل الرئيسي" style="position: absolute; bottom: 0; inset-inline: 0">
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <a href="{{n.href}}" aria-current="{{n.cur}}"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.d}}"></path></svg><span>{{n.t}}</span></a>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+  renderVals() {
+    const I = [
+      'M3 6h18v15H3zM16 2v4M8 2v4M3 10h18',
+      'M9 12a4 4 0 1 0 0-8a4 4 0 1 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.5a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6',
+      'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3',
+      'M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z',
+      'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'
+    ];
+    const T = ['الجلسات', 'اللاعبون', 'الترتيب', 'الأحلام', 'الإعدادات'];
+    const H = ['Screen-Sessions.dc.html', 'Screen-PlayerDetail.dc.html', 'Screen-Leaderboards.dc.html', 'Screen-DreamTeam.dc.html', 'Screen-Settings.dc.html'];
+    const tier = (r) => r >= 75 ? 'tier-gold' : r >= 65 ? 'tier-silver' : 'tier-bronze';
+    const X = [60, 179, 298], Yf = 100, Yb = 292;
+    const pos = { 4: [X[0], Yf], 3: [X[1], Yf], 2: [X[2], Yf], 5: [X[0], Yb], 6: [X[1], Yb], 1: [X[2], Yb] };
+    const six = [[4, 'محمد', 'م ع', 86, 'tier-gold'], [3, 'فهد', 'ف ح', 81, 'tier-gold'], [2, 'سعود', 'س ق', 80, 'tier-mvp'], [5, 'ماجد', 'م ش', 78, 'tier-gold'], [6, 'نايف', 'ن د', 76, 'tier-gold'], [1, 'عبدالله', 'ع غ', 77, 'tier-gold']]
+      .map(([z, name, ini, ovr, t]) => ({ zone: z, name, ini, ovr, tier: t || tier(ovr), aria: name + ' ' + ovr, left: (pos[z][0] - 36) + 'px', top: (pos[z][1] - 46) + 'px' }));
+    const C = { p3: ['var(--chem-pos-strong)', 6, '0'], p2: ['var(--chem-pos-strong)', 5, '0'], p1: ['var(--chem-pos)', 4, '0'], z: ['var(--chem-neutral)', 2.5, '2 6'], n1: ['var(--chem-neg)', 4, '8 6'] };
+    const pairs = [[4, 3, 'p3', '+3'], [3, 2, 'p2', '+2'], [4, 5, 'p2', '+2'], [3, 6, 'p1', '+1'], [2, 1, 'p1', '+1'], [5, 6, 'p3', '+3'], [6, 1, 'n1', '−1']];
+    const lines = pairs.map(([a, b, k]) => ({ x1: pos[a][0], y1: pos[a][1] - 6, x2: pos[b][0], y2: pos[b][1] - 6, c: C[k][0], w: C[k][1], halo: C[k][1] + 3, d: C[k][2] }));
+    const chemTags = pairs.map(([a, b, k, v]) => ({ v, c: C[k][0], left: ((pos[a][0] + pos[b][0]) / 2 - 12) + 'px', top: ((pos[a][1] + pos[b][1]) / 2 - 16) + 'px' }));
+    return {
+      theme: this.props.dark ? 'dark' : 'light',
+      nav: T.map((t, i) => ({ t, d: I[i], href: H[i], cur: i === 3 ? 'page' : 'false' })),
+      six, lines, chemTags
+    };
+  }
+}
+</script>
+
+
+</body></html>

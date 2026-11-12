@@ -1,0 +1,53 @@
+{
+  "platform": {
+    "apiRuntime": "dotnet-isolated:8.0"
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/api/*",
+      "/icons/*",
+      "/assets/*",
+      "*.{png,svg,webp,ico,js,css,json,webmanifest}"
+    ]
+  },
+  "routes": [
+    {
+      "route": "/.auth/login/twitter",
+      "statusCode": 404
+    },
+    {
+      "route": "/api/*",
+      "methods": [
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE"
+      ],
+      "allowedRoles": [
+        "admin"
+      ]
+    },
+    {
+      "route": "/api/*",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "anonymous"
+      ]
+    }
+  ],
+  "responseOverrides": {
+    "401": {
+      "statusCode": 401
+    }
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  },
+  "mimeTypes": {
+    ".webmanifest": "application/manifest+json"
+  }
+}

@@ -1,0 +1,38 @@
+name: Provision infrastructure
+
+# Run manually. Requires OIDC federated credentials for an Azure service principal:
+#   secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, SQL_ADMIN_PASSWORD
+on:
+  workflow_dispatch:
+    inputs:
+      resourceGroup:
+        description: Resource group
+        default: rg-marajeel
+      location:
+        description: Region for SQL + Storage
+        default: westeurope
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  bicep:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Resource group
+        run: az group create -n "${{ inputs.resourceGroup }}" -l "${{ inputs.location }}"
+      - name: Deploy Bicep
+        run: |
+          az deployment group create \
+            -g "${{ inputs.resourceGroup }}" \
+            -f infra/main.bicep \
+            -p sqlAdminPassword='${{ secrets.SQL_ADMIN_PASSWORD }}' \
+            --query properties.outputs

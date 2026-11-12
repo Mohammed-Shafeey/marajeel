@@ -1,0 +1,141 @@
+/* ==========================================================
+   طائرة المراجيل — component reference CSS v2 (uses marajeel-tokens.css)
+   Everything is logical-property based: works in dir="rtl" and dir="ltr".
+   Tailwind: port these as @layer components or React components.
+   ========================================================== */
+
+/* ---------- Helpers ---------- */
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums lining-nums; direction: ltr; unicode-bidi: isolate; }
+.caps { font-family: var(--font-display); text-transform: uppercase; letter-spacing: var(--ls-caps); }
+[dir="rtl"] .flip-rtl { transform: scaleX(-1); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Textures (CSS only, no images) ---------- */
+.tx-concrete {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(var(--tex-ink) 1px, transparent 1.5px),
+    radial-gradient(var(--tex-ink) .8px, transparent 1.3px),
+    linear-gradient(118deg, transparent 0 58%, var(--tex-light) 58% 58.6%, transparent 58.6% 71%, var(--tex-light) 71% 71.3%, transparent 71.3%);
+  background-size: 9px 9px, 13px 13px, 100% 100%;
+  background-position: 0 0, 4px 7px, 0 0;
+}
+.tx-stripes { background-image: repeating-linear-gradient(-55deg, var(--tex-light) 0 2px, transparent 2px 11px); }
+.tx-halftone { position: relative; isolation: isolate; }
+.tx-halftone::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(currentColor 1.3px, transparent 1.6px); background-size: 8px 8px; opacity: .16;
+  -webkit-mask-image: linear-gradient(135deg, #000 0 20%, transparent 65%); mask-image: linear-gradient(135deg, #000 0 20%, transparent 65%);
+}
+[dir="rtl"] .tx-halftone::after { -webkit-mask-image: linear-gradient(-135deg, #000 0 20%, transparent 65%); mask-image: linear-gradient(-135deg, #000 0 20%, transparent 65%); }
+
+/* Brush swash: any element becomes a paint stroke in --swash colour */
+.swash {
+  display: block; background: var(--swash, var(--brand));
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'><path d='M6 34C40 18 90 12 150 12C220 11 300 8 392 4L396 14C330 20 300 24 240 26C300 28 350 30 380 34L372 44C300 40 220 40 150 44C100 47 50 52 12 56L2 48C30 44 60 40 90 38C60 38 30 38 6 34Z'/><circle cx='388' cy='46' r='3'/><circle cx='20' cy='20' r='2.5'/><circle cx='398' cy='28' r='1.6'/></svg>") center / 100% 100% no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 60' preserveAspectRatio='none'><path d='M6 34C40 18 90 12 150 12C220 11 300 8 392 4L396 14C330 20 300 24 240 26C300 28 350 30 380 34L372 44C300 40 220 40 150 44C100 47 50 52 12 56L2 48C30 44 60 40 90 38C60 38 30 38 6 34Z'/><circle cx='388' cy='46' r='3'/><circle cx='20' cy='20' r='2.5'/><circle cx='398' cy='28' r='1.6'/></svg>") center / 100% 100% no-repeat;
+}
+[dir="rtl"] .swash { transform: scaleX(-1); }
+
+/* Team patterns (colour-blind redundancy) — background-colour comes from the team token */
+.pat-a { background-image: radial-gradient(rgba(255,255,255,.24) 1.5px, transparent 1.8px); background-size: 8px 8px; }
+.pat-b { background-image: repeating-linear-gradient(45deg, rgba(18,18,24,.16) 0 3px, transparent 3px 9px); }
+.pat-c { background-image: repeating-linear-gradient(0deg, rgba(18,18,24,.14) 0 3px, transparent 3px 9px); }
+.pat-d { background-image: repeating-linear-gradient(45deg, rgba(18,18,24,.13) 0 2px, transparent 2px 8px), repeating-linear-gradient(-45deg, rgba(18,18,24,.13) 0 2px, transparent 2px 8px); }
+
+/* ---------- Tiers ---------- */
+.tier-gold   { --c1: var(--tier-gold-1);   --c2: var(--tier-gold-2);   --on: var(--on-gold); }
+.tier-silver { --c1: var(--tier-silver-1); --c2: var(--tier-silver-2); --on: var(--on-silver); }
+.tier-bronze { --c1: var(--tier-bronze-1); --c2: var(--tier-bronze-2); --on: var(--on-bronze); }
+.tier-mvp    { --c1: var(--tier-mvp-1);    --c2: var(--tier-mvp-2);    --on: var(--on-mvp); --frame: var(--volt); }
+.tier-prov   { --c1: var(--tier-prov-1);   --c2: var(--tier-prov-2);   --on: var(--on-prov); }
+.team-a { --team: var(--team-a); --on-team: var(--on-team-a); }
+.team-b { --team: var(--team-b); --on-team: var(--on-team-b); }
+.team-c { --team: var(--team-c); --on-team: var(--on-team-c); }
+.team-d { --team: var(--team-d); --on-team: var(--on-team-d); }
+.team-none { --team: #5E5D66; --on-team: #FFFFFF; }
+
+/* ---------- Player card · full (200 × 300) ---------- */
+.fut, .fut-in { clip-path: polygon(0 7%, 9% 0, 34% 0, 40% 2.6%, 60% 2.6%, 66% 0, 91% 0, 100% 7%, 100% 89%, 50% 100%, 0 89%); }
+.fut { width: 200px; height: 300px; padding: 3px; box-sizing: border-box; background: var(--frame, var(--c2)); transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.fut-in {
+  position: relative; height: 100%; color: var(--on); overflow: hidden;
+  background-color: var(--c1);
+  background-image:
+    linear-gradient(115deg, transparent 0 46%, rgba(255,255,255,.35) 46% 49%, transparent 49% 53%, rgba(255,255,255,.18) 53% 54%, transparent 54%),
+    repeating-linear-gradient(-55deg, rgba(255,255,255,.10) 0 2px, transparent 2px 9px),
+    linear-gradient(160deg, var(--c1) 10%, var(--c2) 100%);
+}
+.tier-mvp .fut-in { background-image: repeating-linear-gradient(-55deg, rgba(244,226,43,.10) 0 2px, transparent 2px 9px), linear-gradient(160deg, #2A2A33, #121218 70%), radial-gradient(circle at 80% 10%, rgba(216,27,92,.6), transparent 60%); }
+.fut-photo {
+  position: absolute; top: 20px; inset-inline-end: 12px; width: 120px; height: 130px;
+  background-color: var(--team); color: var(--on-team);
+  clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
+  display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+}
+[dir="rtl"] .fut-photo { clip-path: polygon(0 0, 84% 0, 100% 100%, 0 100%); }
+.fut-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }           /* real cut-out photo */
+.fut-ini { font-family: var(--font-display); font-weight: 800; font-size: 54px; line-height: 1; margin-bottom: 30px; }
+.fut-side { position: absolute; top: 26px; inset-inline-start: 14px; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fut-ovr { font-family: var(--font-num); font-weight: 800; font-size: 54px; line-height: .85; font-variant-numeric: tabular-nums; }
+.fut-pos { font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.1; text-align: center; }
+.fut-rule { width: 30px; height: 2px; background: currentColor; opacity: .45; }
+.fut-badge { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background-color: var(--team); color: var(--on-team); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.fut-name { position: absolute; top: 156px; inset-inline: 14px; text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1.1; padding-bottom: 5px; border-bottom: 1.5px solid currentColor; border-color: color-mix(in srgb, currentColor 35%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fut-stats { position: absolute; top: 192px; inset-inline: 20px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 3px; }
+.fut-stat { display: flex; align-items: baseline; gap: 6px; }
+.fut-stat b { font-family: var(--font-num); font-weight: 800; font-size: 19px; min-width: 24px; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+.fut-stat span { font-family: var(--font-ui); font-weight: 600; font-size: 12px; }
+.fut-ribbon { position: absolute; top: 120px; inset-inline: -8px; height: 26px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; font-size: 15px; transform: skewY(-6deg); }
+.fut-check { position: absolute; top: 0; inset-inline-start: calc(50% - 15px); width: 30px; height: 22px; background: var(--brand); color: var(--on-brand); display: flex; align-items: center; justify-content: center; }
+
+/* states — on a wrapper (.cw), because clip-path would cut a shadow on the card itself */
+.cw { display: inline-block; position: relative; transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.cw.is-selected { --frame: var(--brand); filter: drop-shadow(0 6px 12px rgba(216,27,92,.5)); }
+.cw.is-dragging { transform: rotate(-3deg) scale(1.05); filter: drop-shadow(0 22px 18px rgba(18,18,24,.4)); z-index: 5; }
+.cw.is-benched .fut-in, .cw.is-benched .mini-in { filter: saturate(.25); }
+.cw.is-inactive { opacity: .5; filter: grayscale(1); }
+
+/* ---------- Mini card (72 × 92) ---------- */
+.mini, .mini-in { clip-path: polygon(0 8%, 12% 0, 88% 0, 100% 8%, 100% 86%, 50% 100%, 0 86%); }
+.mini { width: 72px; height: 92px; padding: 3px; box-sizing: border-box; background: var(--frame, var(--c2)); transition: transform var(--dur-lift) var(--ease-out), filter var(--dur-lift) var(--ease-out); }
+.mini-in { position: relative; height: 100%; background-color: var(--team); color: var(--on-team); }
+.mini-ovr { position: absolute; top: 5px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 800; font-size: 20px; line-height: 1; }
+.mini-zone { position: absolute; top: 25px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 700; font-size: 12px; opacity: .9; }
+.mini-ini { position: absolute; top: 14px; inset-inline-end: 6px; font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1; }
+.mini-name { position: absolute; top: 50px; inset-inline: 0; height: 20px; background: var(--ink); color: var(--on-ink); font-family: var(--font-display); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
+[data-theme="dark"] .mini-name { background: #121218; color: #FFFFFF; }
+.slot { width: 72px; height: 92px; box-sizing: border-box; border: 2px dashed var(--border-strong); border-radius: 8px; }
+.slot.is-target { border-color: var(--brand); background: var(--brand-soft); }
+
+/* ---------- Tags, tabs, panels ---------- */
+.tag-new { position: absolute; top: 0; inset-inline-end: 0; height: 26px; padding-inline: 18px 10px; display: flex; align-items: center; background: var(--cyan); color: var(--on-cyan); font-family: var(--font-display); font-weight: 800; font-size: 14px; text-transform: uppercase; clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%); }
+[dir="rtl"] .tag-new { padding-inline: 10px 18px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); }
+.tabs { display: flex; background: var(--surface); box-shadow: var(--e-1); }
+.tab { flex: 1; height: 44px; border: 0; background: transparent; color: var(--text-2); font-family: var(--font-display); font-weight: 700; font-size: 17px; text-transform: uppercase; position: relative; }
+.tab[aria-selected="true"] { background: var(--cyan); color: var(--on-cyan); box-shadow: inset 0 -4px 0 var(--brand); }
+.panel { background: var(--surface); position: relative; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+[dir="rtl"] .panel { clip-path: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut)); }
+.panel-pink { background-color: var(--brand); color: var(--on-brand); }
+.title-xl { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-display); line-height: var(--lh-display); text-transform: uppercase; color: var(--brand-text); }
+
+/* ---------- Buttons ---------- */
+.btn { height: var(--tap); padding-inline: 20px; border: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: .02em; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition: transform var(--dur-press) var(--ease-standard); }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--brand); color: var(--on-brand); height: 56px; font-size: 20px; }
+.btn-ink { background: var(--ink); color: var(--on-ink); }
+.btn-outline { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 2px var(--text); }
+.btn-danger { background: var(--loss); color: #FFFFFF; }
+.btn[disabled] { background: var(--surface-3); color: var(--text-3); }
+
+/* ---------- Bottom nav ---------- */
+.bnav { display: grid; grid-template-columns: repeat(5, 1fr); height: var(--nav-h); background: #121218; color: #C3C2CB; padding-bottom: env(safe-area-inset-bottom); }
+.bnav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: inherit; text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 13px; position: relative; }
+.bnav a[aria-current="page"] { color: #FFFFFF; }
+.bnav a[aria-current="page"]::before { content: ""; position: absolute; inset: 8px 6px; background: var(--brand); transform: skewX(-10deg); z-index: 0; }
+.bnav a > * { position: relative; z-index: 1; }
+
+/* ---------- Loading ---------- */
+.skeleton { background: linear-gradient(90deg, var(--surface-2) 0 40%, var(--surface-3) 50%, var(--surface-2) 60% 100%); background-size: 300% 100%; animation: sk 1.4s linear infinite; }
+@keyframes sk { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } .fut, .mini { transition: none; } }
