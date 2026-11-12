@@ -66,7 +66,7 @@ export function PlayerCard({ player, stats, settings, team, isMvp, selected, ben
     >
       <div className="fut">
         <div className="fut-in">
-          <div className="fut-photo pat-a" style={team ? undefined : { backgroundColor: '#45444E' }}>
+          <div className="fut-photo" style={{ background: 'transparent', color: 'var(--on)' }}>
             {player.photoUrl ? <img src={player.photoUrl} alt="" loading="lazy" /> : <span className="fut-ini">{initials(player.name)}</span>}
           </div>
           <div className="fut-side">
