@@ -190,7 +190,7 @@ function SortTable<R>({ rows, cols, rowKey, initial }: { rows: R[]; cols: Col<R>
             <tr key={rowKey(r)} className="border-t border-line">
               <td className={`num px-2 text-center font-extrabold ${i < 3 && sort.desc ? 'text-brand-text' : 'text-fg-3'}`}>{fmtNum(i + 1)}</td>
               {cols.map((c) => (
-                <td key={c.key} className={`px-2 ${c.numeric ? 'num text-end text-[17px] font-extrabold' : 'max-w-[180px]'}`}>
+                <td key={c.key} className={`px-2 ${c.numeric ? 'text-end font-num text-[17px] font-extrabold tabular-nums' : 'max-w-[180px]'}`}>
                   {c.render ? c.render(r) : String(c.value(r))}
                 </td>
               ))}
