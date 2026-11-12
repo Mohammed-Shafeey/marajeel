@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, NetworkError } from '../api/client';
 import { IconBack, IconX } from './icons';
 import { useNavigate } from 'react-router-dom';
+import { usePrefs } from '../Prefs';
 
 type BtnVariant = 'primary' | 'ink' | 'outline' | 'danger' | 'ghost';
 
@@ -40,8 +41,29 @@ export function TopBar({ title, subtitle, back, actions }: { title: ReactNode; s
         <h1 className="truncate font-display text-[24px] font-extrabold leading-tight">{title}</h1>
         {subtitle && <div className="truncate text-caption font-semibold text-[#C3C2CB]">{subtitle}</div>}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-1 pe-1">{actions}</div>}
+      <div className="flex shrink-0 items-center gap-1 pe-1">
+        {actions}
+        <LangToggle />
+      </div>
     </header>
+  );
+}
+
+/** One-tap language switch: shows the language you'd switch to. */
+function LangToggle() {
+  const { prefs, setPrefs } = usePrefs();
+  const toAr = prefs.lang === 'en';
+  return (
+    <button
+      type="button"
+      onClick={() => setPrefs({ lang: toAr ? 'ar' : 'en' })}
+      aria-label={toAr ? 'العربية' : 'English'}
+      title={toAr ? 'العربية' : 'English'}
+      lang={toAr ? 'ar' : 'en'}
+      className="inline-flex h-11 min-w-11 items-center justify-center border-2 border-[#45444E] px-2 font-display text-[16px] font-extrabold text-white hover:border-white"
+    >
+      {toAr ? 'ع' : 'EN'}
+    </button>
   );
 }
 
