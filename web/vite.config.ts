@@ -27,7 +27,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/\.auth\//],
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api/photos/'),
@@ -50,7 +50,14 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
-    // Without the SWA CLI: talk to `func start` directly (reads only; writes need the SWA auth header).
-    proxy: { '/api': 'http://localhost:7071' },
+    // `wrangler dev` (the Worker + local D1) listens on 8787; Vite gives hot reload on 5173.
+    // Dev only: the proxy changes the host, so present requests to the Worker as same-origin.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+        configure: (proxy) => proxy.on('proxyReq', (req) => req.setHeader('origin', 'http://localhost:8787')),
+      },
+    },
   },
 });

@@ -104,8 +104,17 @@ const en: DeepPartialStrings<Resources> & Record<string, unknown> = {
     viewerHint: 'Anyone can view. Sign in to edit.', saveGroup: 'Save group settings', export: 'Export data',
     exportHint: 'CSV of games', about: 'About ratings', aboutText: 'Ratings use TrueSkill, replayed over every game in order after any change. The 0–100 number is a conservative estimate that rises as the system grows confident.',
   },
+  auth: {
+    title: 'Admin sign in', intro: 'Admins sign in with a personal link. Open it on this phone, or paste the code from it.',
+    code: 'Sign-in code', submit: 'Sign in', signingIn: 'Signing in…', welcome: 'Welcome {{name}} — you’re an admin on this device.',
+    admins: 'Admins', addAdmin: 'Add admin', adminName: 'Admin name', newLink: 'New link', remove: 'Remove',
+    linkFor: 'Sign-in link for {{name}}', linkHint: 'Send it privately — anyone with the link can edit. It’s shown only once.',
+    copy: 'Copy link', copied: 'Copied', share: 'Share',
+    removeConfirm: 'Remove {{name}} as an admin?', resetConfirm: 'Make a new link for {{name}}? Their old link stops working and their devices are signed out.',
+  },
   errors: {
     'auth.required': 'Sign in as an admin to make changes.', 'auth.forbidden': 'Only admins can make changes.',
+    'auth.invalidCode': 'This sign-in link isn’t valid (it may have been replaced).', 'admin.last': 'You can’t remove the last admin.', 'admin.nameRequired': 'Name is required.',
     'player.nameRequired': 'Name is required.', 'player.nameTooLong': 'Name is too long.', 'position.invalid': 'Invalid position.',
     'player.notFound': 'Player not found.', 'session.notFound': 'Session not found.', 'session.dateRequired': 'Date is required.',
     'roster.duplicatePlayer': 'A player can be on at most one team.', 'roster.playerHasGames': 'This player already played this session and can’t be removed.',

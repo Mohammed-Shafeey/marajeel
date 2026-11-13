@@ -1,24 +1,25 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '../api/client';
 
-interface ClientPrincipal {
-  userDetails: string;
-  userRoles: string[];
-  identityProvider: string;
+export interface Me {
+  signedIn: boolean;
+  isAdmin: boolean;
+  name: string | null;
+  id: string | null;
 }
 
+const ME = ['auth'] as const;
+
 /**
- * Static Web Apps built-in auth. `/.auth/me` is served by SWA (and by the SWA CLI emulator locally).
- * Reading is public; only the `admin` role can write (enforced by the API, not just this hook).
+ * Admin session (HttpOnly cookie set by `/api/auth/login`). Reading is public; only admins can
+ * write, and that is enforced by the API, not just by this hook.
  */
 export function useAuth() {
   const q = useQuery({
-    queryKey: ['auth'],
-    queryFn: async () => {
+    queryKey: ME,
+    queryFn: async (): Promise<Me | null> => {
       try {
-        const res = await fetch('/.auth/me', { credentials: 'same-origin' });
-        if (!res.ok) return null;
-        const body = (await res.json()) as { clientPrincipal: ClientPrincipal | null };
-        return body.clientPrincipal;
+        return await api<Me>('me');
       } catch {
         return null;
       }
@@ -26,13 +27,56 @@ export function useAuth() {
     staleTime: 5 * 60_000,
     retry: false,
   });
-  const p = q.data ?? null;
-  return {
-    loading: q.isLoading,
-    signedIn: !!p,
-    isAdmin: !!p?.userRoles.includes('admin'),
-    name: p?.userDetails ?? null,
-    signInUrl: `/.auth/login/github?post_login_redirect_uri=${encodeURIComponent(location.pathname)}`,
-    signOutUrl: `/.auth/logout?post_logout_redirect_uri=/`,
-  };
+  const me = q.data ?? null;
+  return { loading: q.isLoading, signedIn: !!me?.signedIn, isAdmin: !!me?.isAdmin, name: me?.name ?? null, id: me?.id ?? null };
+}
+
+export function useSignIn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => api<Me>('auth/login', { method: 'POST', json: { code } }),
+    onSuccess: (me) => qc.setQueryData(ME, me),
+  });
+}
+
+export function useSignOut() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<void>('auth/logout', { method: 'POST' }),
+    onSuccess: () => qc.setQueryData(ME, { signedIn: false, isAdmin: false, name: null, id: null } satisfies Me),
+  });
+}
+
+// ---- admin management --------------------------------------------------------------------------
+
+export interface AdminInfo {
+  id: string;
+  name: string;
+  createdAt: string;
+  isYou: boolean;
+}
+const ADMINS = ['admins'] as const;
+
+export const useAdmins = (enabled: boolean) => useQuery({ queryKey: ADMINS, queryFn: () => api<AdminInfo[]>('admins'), enabled });
+
+export const signInLink = (code: string) => `${location.origin}/signin#${code}`;
+
+export function useAddAdmin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => api<{ id: string; code: string }>('admins', { method: 'POST', json: { name } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ADMINS }),
+  });
+}
+
+export function useResetAdminLink() {
+  return useMutation({ mutationFn: (id: string) => api<{ id: string; code: string }>(`admins/${id}/code`, { method: 'POST' }) });
+}
+
+export function useRemoveAdmin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`admins/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ADMINS }),
+  });
 }

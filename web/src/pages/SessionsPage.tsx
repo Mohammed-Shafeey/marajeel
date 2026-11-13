@@ -33,9 +33,9 @@ export default function SessionsPage() {
           (auth.isAdmin ? (
             <span className="bg-brand px-2 py-1 font-display text-caption font-extrabold uppercase text-on-brand">{t('settings.admin')}</span>
           ) : (
-            <a href={auth.signInUrl} className="px-2 text-small font-semibold text-[#C3C2CB] underline">
+            <Link to="/signin" className="px-2 text-small font-semibold text-[#C3C2CB] underline">
               {t('common.signIn')}
-            </a>
+            </Link>
           ))
         }
       />

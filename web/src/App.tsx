@@ -15,6 +15,7 @@ import PlayerDetailPage from './pages/PlayerDetailPage';
 import LeaderboardsPage from './pages/LeaderboardsPage';
 import DreamTeamPage from './pages/DreamTeamPage';
 import SettingsPage from './pages/SettingsPage';
+import SignInPage from './pages/SignInPage';
 
 const NAV = [
   { to: '/', key: 'sessions', icon: IconCalendar },
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/leaderboards" element={<LeaderboardsPage />} />
           <Route path="/dream" element={<DreamTeamPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/signin" element={<SignInPage />} />
           <Route path="*" element={<SessionsPage />} />
         </Routes>
       </main>

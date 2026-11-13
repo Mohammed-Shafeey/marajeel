@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 import { usePlayers, useQueue, useSaveSettings, useSessions, useSettings } from '../api/hooks';
 import type { Game, GroupSettings } from '../api/types';
-import { useAuth } from '../auth/useAuth';
+import { Link } from 'react-router-dom';
+import { signInLink, useAddAdmin, useAdmins, useAuth, useRemoveAdmin, useResetAdminLink, useSignOut } from '../auth/useAuth';
 import { IconDownload } from '../components/icons';
-import { Button, SectionTitle, Segmented, Stepper, TopBar, errorMessage, useToast } from '../components/ui';
+import { Button, SectionTitle, Segmented, Sheet, Stepper, TopBar, errorMessage, useConfirm, useToast } from '../components/ui';
 import { fmtNum } from '../i18n';
 import { POSITIONS } from '../lib/positions';
 import { usePrefs } from '../Prefs';
@@ -14,6 +15,7 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const { prefs, setPrefs } = usePrefs();
   const auth = useAuth();
+  const signOut = useSignOut();
   const toast = useToast();
   const queue = useQueue();
   const { settings, isLoading } = useSettings();
@@ -115,15 +117,17 @@ export default function SettingsPage() {
               <span className="flex-1">
                 {t('settings.signedInAs', { name: auth.name })} · <b>{auth.isAdmin ? t('settings.admin') : t('settings.viewer')}</b>
               </span>
-              <a className="btn btn-outline" href={auth.signOutUrl}>{t('common.signOut')}</a>
+              <Button disabled={signOut.isPending} onClick={() => signOut.mutate()}>{t('common.signOut')}</Button>
             </>
           ) : (
             <>
               <span className="flex-1 text-small text-fg-2">{t('settings.viewerHint')}</span>
-              <a className="btn btn-ink" href={auth.signInUrl}>{t('common.signIn')}</a>
+              <Link className="btn btn-ink" to="/signin">{t('common.signIn')}</Link>
             </>
           )}
         </div>
+
+        {admin && <AdminsSection />}
 
         <SectionTitle>{t('settings.export')}</SectionTitle>
         <div className="card-panel flex items-center gap-3 p-4">
@@ -146,6 +150,107 @@ export default function SettingsPage() {
           </Button>
         </div>
       )}
+    </>
+  );
+}
+
+/** Admins list: add someone (shows their personal link once), make a new link, remove. */
+function AdminsSection() {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const admins = useAdmins(true);
+  const add = useAddAdmin();
+  const reset = useResetAdminLink();
+  const remove = useRemoveAdmin();
+  const [name, setName] = useState('');
+  const [link, setLink] = useState<{ name: string; url: string } | null>(null);
+  const fail = (e: unknown) => toast(errorMessage(e, t), 'error');
+
+  return (
+    <>
+      <SectionTitle>{t('auth.admins')}</SectionTitle>
+      <div className="card-panel flex flex-col divide-y divide-line">
+        {(admins.data ?? []).map((a) => (
+          <div key={a.id} className="flex flex-wrap items-center gap-2 px-4 py-2">
+            <span className="min-w-0 flex-1 truncate font-semibold">
+              {a.name}
+              {a.isYou && <span className="ms-2 text-caption text-fg-3">({t('common.you')})</span>}
+            </span>
+            <Button
+              variant="ghost"
+              disabled={reset.isPending}
+              onClick={async () => {
+                if (!(await confirm(t('auth.resetConfirm', { name: a.name })))) return;
+                reset.mutate(a.id, { onSuccess: (r) => setLink({ name: a.name, url: signInLink(r.code) }), onError: fail });
+              }}
+            >
+              {t('auth.newLink')}
+            </Button>
+            {!a.isYou && (
+              <Button
+                variant="ghost"
+                className="!text-loss"
+                disabled={remove.isPending}
+                onClick={async () => {
+                  if (await confirm(t('auth.removeConfirm', { name: a.name }), { danger: true, confirmLabel: t('auth.remove') })) remove.mutate(a.id, { onError: fail });
+                }}
+              >
+                {t('auth.remove')}
+              </Button>
+            )}
+          </div>
+        ))}
+        <form
+          className="flex gap-2 p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const n = name.trim();
+            if (!n) return;
+            add.mutate(n, {
+              onSuccess: (r) => {
+                setLink({ name: n, url: signInLink(r.code) });
+                setName('');
+              },
+              onError: fail,
+            });
+          }}
+        >
+          <input className="min-w-0 flex-1" placeholder={t('auth.adminName')} aria-label={t('auth.adminName')} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+          <Button type="submit" variant="ink" disabled={add.isPending || !name.trim()}>
+            {t('auth.addAdmin')}
+          </Button>
+        </form>
+      </div>
+
+      <Sheet
+        open={!!link}
+        onClose={() => setLink(null)}
+        title={link ? t('auth.linkFor', { name: link.name }) : ''}
+        footer={
+          link && (
+            <>
+              {'share' in navigator && (
+                <Button onClick={() => void navigator.share({ url: link.url }).catch(() => {})}>{t('auth.share')}</Button>
+              )}
+              <Button
+                variant="primary"
+                onClick={() =>
+                  void navigator.clipboard.writeText(link.url).then(
+                    () => toast(t('auth.copied')),
+                    () => toast(t('common.error'), 'error'),
+                  )
+                }
+              >
+                {t('auth.copy')}
+              </Button>
+            </>
+          )
+        }
+      >
+        <p className="mb-3 text-small text-fg-2">{t('auth.linkHint')}</p>
+        <p dir="ltr" className="select-all break-all bg-surface-2 p-3 font-mono text-small">{link?.url}</p>
+      </Sheet>
     </>
   );
 }

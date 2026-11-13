@@ -5,7 +5,7 @@
       "name": "marajeel",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 4280
+      "port": 5173
     }
   ]
 }

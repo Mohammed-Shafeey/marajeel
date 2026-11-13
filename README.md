@@ -5,81 +5,82 @@ split them into balanced teams, record each game's score and MVP from the court 
 TrueSkill ratings, per-position ratings, chemistry, streaks, head-to-head, leaderboards and a dream team.
 Arabic-first (RTL) with an English toggle.
 
+Runs entirely on Cloudflare's free plan: one **Worker** serves the built PWA and the JSON API, and **D1**
+(SQLite) stores everything, including player photos.
+
 ```
-web/            React + Vite + TypeScript + Tailwind PWA (dnd-kit, TanStack Query, i18next)
-api/
-  Marajeel.Core   Domain, EF Core (Azure SQL), validation, TrueSkill + analytics replay, demo simulator
-  Marajeel.Api    .NET 8 isolated Azure Functions (thin HTTP layer, admin checks)
-  Marajeel.Seed   Seed tool: 30 fake players + ~15 simulated sessions
-  Marajeel.Tests  xUnit tests (ratings, chemistry, streaks, head-to-head, validation, simulation)
-infra/          Bicep (Static Web App, Azure SQL serverless free offer, Storage)
-design/         Design language from Claude Design (tokens, component CSS, boards)
-.github/        CI (test → build → deploy) and manual infra provisioning
+web/              React + Vite + TypeScript + Tailwind PWA (dnd-kit, TanStack Query, i18next)
+worker/
+  src/index.ts    The API: routes, admin checks, D1 queries
+  src/auth.ts     Admin sign-in links and session cookies
+  src/core/       TrueSkill, analytics replay, validation, settings, demo simulator (pure TS, no I/O)
+  migrations/     D1 schema (SQL)
+  test/           Vitest tests (ratings, chemistry, streaks, head-to-head, validation, simulation)
+scripts/          seed.ts (demo data) and admin.ts (create an admin sign-in link)
+wrangler.jsonc    Worker + static assets + D1 binding
+design/           Design language from Claude Design (tokens, component CSS, boards)
+.github/          CI: test → build → deploy
 ```
 
 ## Local development
 
-Prerequisites: Node 20+, .NET 8 SDK, and **either** Docker Desktop **or** SQL Server LocalDB (Windows).
+Prerequisites: Node 22+ (the scripts in `scripts/` run TypeScript directly with Node).
 
 ```bash
-npm install              # root: Azurite, SWA CLI, Functions Core Tools, concurrently
+npm install
 npm --prefix web install
+npm run db:migrate:local      # create the local D1 database (under .wrangler/)
+npm run seed                  # optional: 30 fake players + ~15 simulated sessions
+node scripts/admin.ts "Your name"   # local admin; the sign-in link goes to admin-links.local.txt
+npm run dev                   # Worker on :8787 + Vite on :5173
 ```
 
-**Database**, pick one:
-
-- Docker: `docker compose up -d` starts SQL Server on `localhost,14333` and Azurite. Then copy
-  `api/Marajeel.Api/local.settings.example.json` to `local.settings.json` (its connection string already points at the container).
-- LocalDB (no Docker): copy the example file and set
-  `SQL_CONNECTION` to `Server=(localdb)\MSSQLLocalDB;Database=marajeel;Trusted_Connection=True;TrustServerCertificate=True`.
-
-Migrations run automatically when the API starts. To load demo data (and see how well ratings recover
-the hidden "true" skills):
-
-```bash
-# bash; on PowerShell use $env:SQL_CONNECTION = "..."
-SQL_CONNECTION="<same connection string>" npm run seed
-```
-
-**Run everything** (Azurite + Functions + Vite + SWA emulator with auth):
-
-```bash
-npm run dev
-```
-
-Open **http://localhost:4280**. To act as an admin locally, open
-`http://localhost:4280/.auth/login/github`, then type a username and add `admin` on its own line in *User's roles*.
-(Port 5173 is plain Vite; reads work there, but writes need the SWA auth header, so use 4280.)
+Open **http://localhost:5173**, then open the link from `admin-links.local.txt` to become an admin.
+Without signing in, everything is read-only.
 
 **Tests**
 
 ```bash
-npm test                 # dotnet test + vitest
+npm test                 # worker tests + web tests
+npm run typecheck        # worker type-check (web is type-checked by its build)
 ```
 
-## Deployment
+## Deployment (Cloudflare, free plan)
 
-1. **Provision Azure** (once): `az group create -n rg-marajeel -l westeurope`, then
-   `az deployment group create -g rg-marajeel -f infra/main.bicep -p sqlAdminPassword='<strong password>'`,
-   or run the *Provision infrastructure* workflow (needs OIDC secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
-   `AZURE_SUBSCRIPTION_ID`, plus `SQL_ADMIN_PASSWORD`).
-2. **Deployment token**: in the portal, open the Static Web App, choose *Manage deployment token*, and save the token as the GitHub secret
-   `AZURE_STATIC_WEB_APPS_API_TOKEN`.
-3. **Push to `main`**: the *Test & deploy* workflow runs all tests, builds the PWA, publishes the API and uploads both.
-4. **Admins**: in the Static Web App, go to *Role management*, choose *Invite*, pick a provider (GitHub, Microsoft or Google) and enter the person's
-   username/email with role `admin`. Send them the invite link. Everyone else can read without signing in.
+First time, from this folder:
 
-Writes are protected twice: `staticwebapp.config.json` limits non-GET `/api/*` to the `admin` role, and every
-write function checks the `x-ms-client-principal` header itself (`api/Marajeel.Api/Infrastructure.cs`).
+```bash
+npx wrangler login                       # opens the browser; sign in to Cloudflare
+npx wrangler d1 create marajeel          # copy the printed database_id into wrangler.jsonc
+npm run deploy                           # build, apply migrations to the live DB, deploy
+node scripts/admin.ts "Your name" --remote --url https://<your-worker>.workers.dev
+```
+
+The last command creates the first admin and writes their sign-in link to `admin-links.local.txt` (git-ignored).
+The live database starts empty: add your real players in the app.
+
+**Automatic deploys from GitHub** (optional): create a Cloudflare API token with the *Edit Cloudflare Workers* template
+plus *D1: Edit*, then add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Every push to
+`main` then runs the tests, applies migrations and deploys. Without the secrets the deploy step is skipped.
+
+## Admins
+
+Reading is public. Writing needs an admin session:
+
+- Each admin has a **personal sign-in link** (`/signin#<code>`). Opening it once signs that device in for 180 days.
+  The code lives in the URL fragment, so it never reaches server logs, and the database stores only its SHA-256 hash.
+- Admins add each other under **Settings → Admins**. The new link is shown once, to copy or share privately.
+  **New link** replaces a lost or leaked link and signs that admin out everywhere. You can't remove the last admin.
+- Every write route checks the session server-side (`worker/src/index.ts`), and also rejects cross-site requests.
 
 ## How ratings work
 
 Games are the only source of truth. Every derived number is recomputed by replaying **all games in
-chronological order** (`AnalyticsEngine.Compute`) on each read. With hundreds of games that takes milliseconds, so
+chronological order** (`compute` in `worker/src/core/analytics.ts`) on each read. With hundreds of games that takes milliseconds, so
 correcting a score or changing the algorithm keeps everything consistent. Nothing is updated incrementally.
 
 - **Individual rating:** two-team TrueSkill (μ₀ = 25, σ₀ = 25/3, β = σ₀/2, τ = σ₀/100, no draws). This is an exact
-  closed-form port that matches Moserware's `TwoTeamTrueSkillCalculator` (`TrueSkill.cs`).
+  closed-form port that matches Moserware's `TwoTeamTrueSkillCalculator` (`worker/src/core/trueskill.ts`).
 - **Score margin:** the update step is scaled by `1 + 0.5 · clamp((margin − 2) / 8, 0, 1)`, so a 2-point game counts 1.0×
   and a 10+ point blowout counts at most 1.5×.
 - **Displayed 0–100 rating:** `clamp(round(40 + 1.5 · (μ − 3σ)), 0, 100)`. This is a conservative estimate: a new player
@@ -103,7 +104,7 @@ By default each team fills zones **4 · 3 · 2** (front: left hitter, setter, ri
 **Settings → Game → Position template**. For example, untick 6 to play 5-a-side without a libero, and set the allowed
 team counts (2 or 3 teams means 10 or 15 active players). Session check-in, lineup validation (client and server), the
 balancer and the dream team all follow the template. The default lives in
-`api/Marajeel.Core/Domain/GroupSettings.cs` and `web/src/api/types.ts` (`DEFAULT_SETTINGS`).
+`worker/src/core/settings.ts` and `web/src/api/types.ts` (`DEFAULT_SETTINGS`).
 
 ## Design
 

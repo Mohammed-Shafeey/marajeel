@@ -1,19 +1,27 @@
 {
   "name": "marajeel",
   "private": true,
+  "type": "module",
   "scripts": {
-    "azurite": "azurite --silent --location .azurite --skipApiVersionCheck --loose",
-    "api": "cd api/Marajeel.Api && func start --port 7071",
-    "web": "npm --prefix web run dev",
-    "swa": "swa start http://localhost:5173 --api-devserver-url http://localhost:7071 --port 4280",
-    "dev": "concurrently -k -n azurite,api,web,swa -c gray,blue,magenta,green \"npm:azurite\" \"npm:api\" \"npm:web\" \"npm:swa\"",
-    "seed": "dotnet run --project api/Marajeel.Seed -- --reset",
-    "test": "dotnet test api/Marajeel.sln && npm --prefix web test"
+    "dev": "concurrently -k -n worker,web -c blue,magenta \"npm:dev:worker\" \"npm:dev:web\"",
+    "dev:worker": "npm run db:migrate:local && wrangler dev --port 8787",
+    "dev:web": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "typecheck": "tsc -p worker/tsconfig.json",
+    "test": "vitest run --config worker/vitest.config.ts && npm --prefix web test",
+    "test:worker": "vitest run --config worker/vitest.config.ts",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "seed": "node scripts/seed.ts --local",
+    "admin:add": "node scripts/admin.ts",
+    "deploy": "npm run build && npm run db:migrate:remote && wrangler deploy"
   },
   "devDependencies": {
-    "@azure/static-web-apps-cli": "^2.1.0",
-    "azure-functions-core-tools": "^4.16.0",
-    "azurite": "^3.37.0",
-    "concurrently": "^9.2.5"
+    "@cloudflare/workers-types": "^5.20261110.1",
+    "@types/node": "^22.10.0",
+    "concurrently": "^9.2.5",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.40.0"
   }
 }

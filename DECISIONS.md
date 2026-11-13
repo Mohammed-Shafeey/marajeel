@@ -19,17 +19,26 @@ Judgment calls made while building, with the simplest reasonable interpretation 
 - **Derived stats are computed on read**, not stored in snapshot tables. A full replay over a few hundred games
   takes milliseconds, so there's nothing to keep in sync. The `from`/`to` window ("this month") limits counting stats
   only; ratings always use the full history.
-- **The rating replay runs in C#; team rating, balancing and the dream team run in TypeScript.** Team rating has to update live
+- **Hosting moved from Azure to Cloudflare** (Workers + D1) because Azure sign-up kept failing for the organiser. The
+  original .NET/Azure SQL version is in git history (before the Cloudflare commit). Everything fits the free plan with no card:
+  100k requests/day, 5 GB of D1 storage.
+- **Analytics are cached per data version.** Every write bumps `meta.data_version`. `/api/analytics` stores its JSON in
+  `analytics_cache` for that version, so repeat reads cost one row lookup and stay well inside the Workers free-plan CPU budget.
+  The cache is disposable: deleting it just causes a recompute.
+- **The rating replay runs in the Worker; team rating, balancing and the dream team run in the browser.** Team rating has to update live
   while you drag cards, so it lives in one TS function (`web/src/lib/teamRating.ts`) used by the court, the balancer
   and the dream team. The API serves the per-player and per-pair numbers it needs.
-- **Photo uploads are proxied through the API** (the alternative was SAS URLs). The storage account stays private with no CORS setup, and photos are served via
-  `/api/photos/{id}-{version}` with immutable caching.
+- **Photos are stored in D1** as BLOBs (~512 px WebP, tens of KB each) rather than R2, which needs a card on file to enable.
+  They're served via `/api/photos/{id}-{version}` with immutable caching. Each upload bumps the version and deletes the old row.
+- **Admins sign in with personal links, not passwords or an identity provider.** Cloudflare Access (email codes)
+  needs a card on file. Passwords would need slow hashing that doesn't fit the free CPU budget. A random 192-bit code
+  needs only SHA-256, can be revoked or replaced per admin, and opening a link is the easiest flow on a phone.
 - **The client encodes WebP**, falling back to JPEG where the browser can't encode WebP from a canvas (Safari). The server
   accepts both and stores the detected content type.
-- **EF migrations run at API startup** (in the background). This is fine at this scale, and the deploy pipeline needs no DB access.
+- **D1 migrations are applied by the deploy** (`wrangler d1 migrations apply --remote`) before the new Worker goes live.
 - **TrueSkill is our own port**, about 100 lines with no dependency risk, rather than the unmaintained Moserware.Skills. For two teams the factor graph
   has an exact closed form, and it's covered by tests.
-- **Local development uses LocalDB or Docker.** Docker needs WSL, which wasn't available on the dev machine.
+- **Local development is just `npm run dev`**: `wrangler dev` runs the Worker with a local SQLite copy of D1, so there's no Docker or database server.
 
 ## Ratings & stats
 

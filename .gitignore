@@ -15,3 +15,8 @@ local.settings.json
 !.env.example
 *.log
 TestResults/
+
+# Admin sign-in links (secrets)
+admin-links.local.txt
+.wrangler/
+.dev.vars
