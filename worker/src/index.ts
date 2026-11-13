@@ -164,7 +164,9 @@ route('PUT', 'players/:id/photo', true, async ({ db, req, params }) => {
   if (bytes.length > MAX_PHOTO_BYTES) throw new ApiException(400, 'photo.tooLarge', 'The photo must be under 1 MB.');
   const contentType = isWebP(bytes) ? 'image/webp' : isJpeg(bytes) ? 'image/jpeg' : null;
   if (!contentType) throw new ApiException(400, 'photo.notWebp', 'The photo must be a WebP (or JPEG) image.');
-  const version = (p.photo_version ?? 0) + 1;
+  // A timestamp, not old+1: after a photo is removed (version NULL) a counter would restart at 1 and
+  // reuse an earlier URL that other devices have cached forever, so they'd keep showing the old photo.
+  const version = Math.max(Date.now(), (p.photo_version ?? 0) + 1);
   await db.batch([
     db.prepare('INSERT OR REPLACE INTO photos (name, content_type, data) VALUES (?, ?, ?)').bind(`${id}-${version}`, contentType, bytes),
     db.prepare('UPDATE players SET photo_version = ? WHERE id = ?').bind(version, id),
