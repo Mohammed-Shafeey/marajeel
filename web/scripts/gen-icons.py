@@ -12,7 +12,7 @@ from PIL import Image
 web = Path(__file__).resolve().parent.parent
 src = Image.open(web / "icons-src" / "icon-source.webp").convert("RGB")
 out = web / "public" / "icons"
-bg = src.getpixel((0, 0))  # the artwork's near-black background
+bg = src.getpixel((0, 0))  # the artwork's own background colour (corner pixel)
 
 def save(img, size, name):
     img.resize((size, size), Image.LANCZOS).save(out / name, optimize=True)
