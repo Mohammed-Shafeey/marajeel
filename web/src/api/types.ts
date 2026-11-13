@@ -116,6 +116,9 @@ export interface PlayerStats {
   gamesBySession: Record<Guid, number>;
   ratingDelta: number;
   lastPlayedAt: string | null;
+  /** Judge star ratings received (all time) and their average (1–5), or null if none. */
+  judgeRatings: number;
+  judgeAvg: number | null;
 }
 
 export interface PairStats {

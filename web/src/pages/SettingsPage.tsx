@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { usePlayers, useQueue, useSaveSettings, useSessions, useSettings } from '../api/hooks';
 import type { Game, GroupSettings } from '../api/types';
 import { Link } from 'react-router-dom';
-import { signInLink, useAddAdmin, useAdmins, useAuth, useRemoveAdmin, useResetAdminLink, useSignOut } from '../auth/useAuth';
+import { signInLink, type Role, useAddAdmin, useAdmins, useAuth, useRemoveAdmin, useResetAdminLink, useSignOut } from '../auth/useAuth';
 import { IconDownload } from '../components/icons';
 import { Button, SectionTitle, Segmented, Sheet, Stepper, TopBar, errorMessage, useConfirm, useToast } from '../components/ui';
 import { fmtNum } from '../i18n';
@@ -115,7 +115,7 @@ export default function SettingsPage() {
           {auth.signedIn ? (
             <>
               <span className="flex-1">
-                {t('settings.signedInAs', { name: auth.name })} · <b>{auth.isAdmin ? t('settings.admin') : t('settings.viewer')}</b>
+                {t('settings.signedInAs', { name: auth.name })} · <b>{auth.isAdmin ? t('settings.admin') : auth.isJudge ? t('settings.judge') : t('settings.viewer')}</b>
               </span>
               <Button disabled={signOut.isPending} onClick={() => signOut.mutate()}>{t('common.signOut')}</Button>
             </>
@@ -164,6 +164,7 @@ function AdminsSection() {
   const reset = useResetAdminLink();
   const remove = useRemoveAdmin();
   const [name, setName] = useState('');
+  const [role, setRole] = useState<Role>('judge');
   const [link, setLink] = useState<{ name: string; url: string } | null>(null);
   const fail = (e: unknown) => toast(errorMessage(e, t), 'error');
 
@@ -176,6 +177,9 @@ function AdminsSection() {
             <span className="min-w-0 flex-1 truncate font-semibold">
               {a.name}
               {a.isYou && <span className="ms-2 text-caption text-fg-3">({t('common.you')})</span>}
+            </span>
+            <span className={`px-2 py-0.5 font-display text-caption font-extrabold ${a.role === 'admin' ? 'bg-brand text-on-brand' : 'bg-cyan text-on-cyan'}`}>
+              {a.role === 'admin' ? t('settings.admin') : t('settings.judge')}
             </span>
             <Button
               variant="ghost"
@@ -202,12 +206,12 @@ function AdminsSection() {
           </div>
         ))}
         <form
-          className="flex gap-2 p-4"
+          className="flex flex-wrap gap-2 p-4"
           onSubmit={(e) => {
             e.preventDefault();
             const n = name.trim();
             if (!n) return;
-            add.mutate(n, {
+            add.mutate({ name: n, role }, {
               onSuccess: (r) => {
                 setLink({ name: n, url: signInLink(r.code) });
                 setName('');
@@ -216,9 +220,17 @@ function AdminsSection() {
             });
           }}
         >
+          <div className="flex w-full gap-2" role="group" aria-label={t('auth.role')}>
+            {(['judge', 'admin'] as const).map((r) => (
+              <button key={r} type="button" className="chip" aria-pressed={role === r} onClick={() => setRole(r)}>
+                {r === 'admin' ? t('settings.admin') : t('settings.judge')}
+              </button>
+            ))}
+            <span className="self-center text-caption text-fg-3">{role === 'admin' ? t('auth.adminHint') : t('auth.judgeHint')}</span>
+          </div>
           <input className="min-w-0 flex-1" placeholder={t('auth.adminName')} aria-label={t('auth.adminName')} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
           <Button type="submit" variant="ink" disabled={add.isPending || !name.trim()}>
-            {t('auth.addAdmin')}
+            {role === 'admin' ? t('auth.addAdmin') : t('auth.addJudge')}
           </Button>
         </form>
       </div>

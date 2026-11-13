@@ -90,6 +90,13 @@ export default function PlayerDetailPage() {
           <Tile label={t('player.mvps')} value={fmtNum(stats?.mvps ?? 0)} accent />
           <Tile label={t('player.streak')} value={fmtNum(stats?.currentStreak ?? 0)} sub={`${t('player.longest')} ${fmtNum(stats?.longestStreak ?? 0)}`} />
           <Tile label={t('player.played')} value={fmtNum(stats?.games ?? 0)} />
+          <div className="col-span-2 sm:col-span-4">
+            <Tile
+              label={t('rate.judgeScore')}
+              value={statsAll?.judgeAvg != null ? `${fmtNum(Math.round(statsAll.judgeAvg * 10) / 10)} ★` : '—'}
+              sub={statsAll?.judgeRatings ? t('rate.judgeCount', { n: statsAll.judgeRatings }) : t('rate.none')}
+            />
+          </div>
         </div>
 
         <SectionTitle>{t('player.history')}</SectionTitle>

@@ -20,7 +20,7 @@ export default function SignInPage() {
   const submit = (c: string) =>
     signIn.mutate(c.trim(), {
       onSuccess: (me) => {
-        toast(t('auth.welcome', { name: me.name }));
+        toast(t(me.role === 'judge' ? 'auth.welcomeJudge' : 'auth.welcome', { name: me.name }));
         nav('/settings', { replace: true });
       },
     });
@@ -43,7 +43,7 @@ export default function SignInPage() {
     <>
       <TopBar title={t('auth.title')} back="/settings" />
       <div className="page max-w-md">
-        {auth.isAdmin && !signIn.isPending && <p className="card-panel mb-4 p-4 font-semibold">{t('settings.signedInAs', { name: auth.name })}</p>}
+        {auth.signedIn && !signIn.isPending && <p className="card-panel mb-4 p-4 font-semibold">{t('settings.signedInAs', { name: auth.name })}</p>}
         <form
           className="card-panel flex flex-col gap-4 p-4"
           onSubmit={(e) => {

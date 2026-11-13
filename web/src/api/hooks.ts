@@ -172,6 +172,15 @@ export function useDeleteGame() {
   });
 }
 
+/** A judge's 1–5 star rating of one player in a just-saved game (queued offline like game writes). */
+export function useRatePlayer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (r: { gameId: string; playerId: string; stars: number }) => submit({ kind: 'rateGame', id: `rate:${r.gameId}:${r.playerId}`, ...r }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['analytics'] }),
+  });
+}
+
 export function useSaveSettings() {
   const qc = useQueryClient();
   return useMutation({

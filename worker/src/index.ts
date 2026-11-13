@@ -1,4 +1,4 @@
-import { currentAdmin, randomToken, sameOrigin, sessionCookie, SESSION_DAYS, sha256, type Admin } from './auth.ts';
+import { currentAdmin, randomToken, sameOrigin, sessionCookie, SESSION_DAYS, sha256, type Admin, type Role } from './auth.ts';
 import { compute, type GameRecord, type Side } from './core/analytics.ts';
 import { isValidPosition, normalizeSettings, type GroupSettings } from './core/settings.ts';
 import { validateGame, validatePlayer, validateRoster, validateSettings, type GameParticipantInput, type RosterInput, type ValidationError } from './core/validators.ts';
@@ -19,17 +19,19 @@ interface Ctx {
 }
 
 type Handler = (c: Ctx) => Promise<Response>;
+/** Who may call a route: anyone, a judge or admin, or an admin only. */
+type Access = 'public' | 'judge' | 'admin';
 interface Route {
   method: string;
   pattern: RegExp;
-  admin: boolean;
+  access: Access;
   handler: Handler;
 }
 
 const ID = '([0-9a-fA-F-]{36})';
 const routes: Route[] = [];
-const route = (method: string, path: string, admin: boolean, handler: Handler) =>
-  routes.push({ method, pattern: new RegExp(`^/api/${path.replace(/:id/g, ID)}/?$`), admin, handler });
+const route = (method: string, path: string, access: Access, handler: Handler) =>
+  routes.push({ method, pattern: new RegExp(`^/api/${path.replace(/:id/g, ID)}/?$`), access, handler });
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -43,9 +45,10 @@ export default {
 
     try {
       const admin = await currentAdmin(req, env.DB);
-      if (hit.r.admin) {
+      if (hit.r.access !== 'public') {
         if (!admin) return errorResponse(401, 'auth.required', 'Sign in as an admin to make changes.');
         if (!sameOrigin(req)) return errorResponse(403, 'auth.forbidden', 'Cross-site requests are not allowed.');
+        if (hit.r.access === 'admin' && admin.role !== 'admin') return errorResponse(403, 'auth.adminOnly', 'Only admins can do this.');
       }
       return await hit.r.handler({ req, env, db: env.DB, url, params: hit.m!.slice(1), admin });
     } catch (e) {
@@ -76,6 +79,13 @@ function parseSettings(text: string | undefined | null): GroupSettings {
 }
 
 const str = (v: unknown) => (typeof v === 'string' ? v : null);
+
+/** Judges may only change open sessions (admins can change any, and alone can close/reopen them). */
+async function requireOpenForJudge(db: D1Database, admin: Admin | null, sessionId: string) {
+  if (admin?.role !== 'judge') return;
+  const row = await db.prepare('SELECT status FROM sessions WHERE id = ?').bind(sessionId).first<{ status: string }>();
+  if (row && row.status !== 'open') throw new ApiException(403, 'session.closedForJudge', 'This session is closed. Only an admin can change it.');
+}
 const cleanShort = (s: unknown) => {
   const v = str(s)?.trim();
   return v ? v.slice(0, 20) : null;
@@ -107,7 +117,7 @@ const loadPlayer = async (db: D1Database, id: string) => {
   return p;
 };
 
-route('GET', 'players', false, async ({ db }) => {
+route('GET', 'players', 'public', async ({ db }) => {
   const { results } = await db.prepare('SELECT * FROM players ORDER BY name').all<PlayerRow>();
   return json(results.map(playerDto));
 });
@@ -119,7 +129,7 @@ interface PlayerInput {
   isActive?: unknown;
 }
 
-route('POST', 'players', true, async ({ db, req }) => {
+route('POST', 'players', 'admin', async ({ db, req }) => {
   const input = await body<PlayerInput>(req);
   throwIfInvalid(validatePlayer(input.name, input.preferredPosition));
   const id = crypto.randomUUID();
@@ -132,7 +142,7 @@ route('POST', 'players', true, async ({ db, req }) => {
   return json(playerDto(await loadPlayer(db, id)), 201);
 });
 
-route('PUT', 'players/:id', true, async ({ db, req, params }) => {
+route('PUT', 'players/:id', 'admin', async ({ db, req, params }) => {
   const id = guid(params[0], 'id');
   const input = await body<PlayerInput>(req);
   throwIfInvalid(validatePlayer(input.name, input.preferredPosition));
@@ -156,7 +166,7 @@ const isWebP = (b: Uint8Array) =>
  * The client crops to a square, resizes to 512px and encodes WebP (JPEG on browsers that can't encode
  * WebP, e.g. Safari), then PUTs the bytes here. Stored in D1 (photos are small); names are versioned.
  */
-route('PUT', 'players/:id/photo', true, async ({ db, req, params }) => {
+route('PUT', 'players/:id/photo', 'admin', async ({ db, req, params }) => {
   const id = guid(params[0], 'id');
   const p = await loadPlayer(db, id);
   const bytes = new Uint8Array(await req.arrayBuffer());
@@ -175,7 +185,7 @@ route('PUT', 'players/:id/photo', true, async ({ db, req, params }) => {
   return json(playerDto(await loadPlayer(db, id)));
 });
 
-route('DELETE', 'players/:id/photo', true, async ({ db, params }) => {
+route('DELETE', 'players/:id/photo', 'admin', async ({ db, params }) => {
   const id = guid(params[0], 'id');
   const p = await loadPlayer(db, id);
   await db.batch([
@@ -189,7 +199,7 @@ route('DELETE', 'players/:id/photo', true, async ({ db, params }) => {
 routes.push({
   method: 'GET',
   pattern: /^\/api\/photos\/([0-9a-f-]{36}-\d+)$/,
-  admin: false,
+  access: 'public',
   handler: async ({ db, params }) => {
     const row = await db.prepare('SELECT content_type, data FROM photos WHERE name = ?').bind(params[0]).first<{ content_type: string; data: ArrayBuffer | number[] }>();
     if (!row) return new Response('Not found', { status: 404 });
@@ -283,7 +293,7 @@ async function loadSessionDetail(db: D1Database, id: string) {
   };
 }
 
-route('GET', 'sessions', false, async ({ db }) => {
+route('GET', 'sessions', 'public', async ({ db }) => {
   const { results } = await db
     .prepare(
       `SELECT s.id, s.date, s.notes, s.status,
@@ -308,7 +318,7 @@ route('GET', 'sessions', false, async ({ db }) => {
   );
 });
 
-route('GET', 'sessions/:id', false, async ({ db, params }) => json(await loadSessionDetail(db, guid(params[0], 'id'))));
+route('GET', 'sessions/:id', 'public', async ({ db, params }) => json(await loadSessionDetail(db, guid(params[0], 'id'))));
 
 interface SessionInput {
   date?: unknown;
@@ -327,7 +337,7 @@ function validateSession(input: SessionInput) {
   return { date: input.date as string, notes: str(input.notes)?.trim() || null, status: (input.status as 'open' | 'closed' | null) ?? null };
 }
 
-route('POST', 'sessions', true, async ({ db, req }) => {
+route('POST', 'sessions', 'judge', async ({ db, req }) => {
   const s = validateSession(await body<SessionInput>(req));
   const id = crypto.randomUUID();
   await db.batch([
@@ -337,9 +347,11 @@ route('POST', 'sessions', true, async ({ db, req }) => {
   return json(await loadSessionDetail(db, id), 201);
 });
 
-route('PUT', 'sessions/:id', true, async ({ db, req, params }) => {
+route('PUT', 'sessions/:id', 'judge', async ({ db, req, params, admin }) => {
   const id = guid(params[0], 'id');
   const s = validateSession(await body<SessionInput>(req));
+  await requireOpenForJudge(db, admin, id);
+  if (admin!.role === 'judge' && s.status === 'closed') throw new ApiException(403, 'auth.adminOnly', 'Only admins can close or reopen a session.');
   const res = await db.batch([
     db.prepare('UPDATE sessions SET date = ?, notes = ?, status = COALESCE(?, status) WHERE id = ?').bind(s.date, s.notes, s.status, id),
     bump(db),
@@ -348,9 +360,10 @@ route('PUT', 'sessions/:id', true, async ({ db, req, params }) => {
   return json(await loadSessionDetail(db, id));
 });
 
-route('DELETE', 'sessions/:id', true, async ({ db, params }) => {
+route('DELETE', 'sessions/:id', 'admin', async ({ db, params }) => {
   const id = guid(params[0], 'id');
   await db.batch([
+    db.prepare('DELETE FROM game_ratings WHERE game_id IN (SELECT id FROM games WHERE session_id = ?)').bind(id),
     db.prepare('DELETE FROM game_participants WHERE game_id IN (SELECT id FROM games WHERE session_id = ?)').bind(id),
     db.prepare('DELETE FROM games WHERE session_id = ?').bind(id),
     db.prepare('DELETE FROM session_players WHERE session_id = ?').bind(id),
@@ -365,8 +378,9 @@ route('DELETE', 'sessions/:id', true, async ({ db, params }) => {
  * Replaces the session roster: who is checked in, the teams, and the base lineup (team + position or
  * bench). With no teams this is plain check-in. Applied as one atomic batch.
  */
-route('PUT', 'sessions/:id/roster', true, async ({ db, req, params }) => {
+route('PUT', 'sessions/:id/roster', 'judge', async ({ db, req, params, admin }) => {
   const id = guid(params[0], 'id');
+  await requireOpenForJudge(db, admin, id);
   const raw = await body<{ teams?: unknown; players?: unknown }>(req);
   const input: RosterInput = {
     teams: (Array.isArray(raw.teams) ? raw.teams : []).map((t: Record<string, unknown>) => ({
@@ -440,10 +454,11 @@ interface GameRequest {
  * Idempotent upsert keyed by the client-generated id: replaying a queued offline submission is safe.
  * Derived stats are recomputed from the full history on read, so nothing else needs updating.
  */
-route('PUT', 'games/:id', true, async ({ db, req, params }) => {
+route('PUT', 'games/:id', 'judge', async ({ db, req, params, admin }) => {
   const id = guid(params[0], 'id');
   const b = await body<GameRequest>(req);
   const sessionId = guid(b.sessionId, 'sessionId');
+  await requireOpenForJudge(db, admin, sessionId);
   const participants: GameParticipantInput[] = (Array.isArray(b.participants) ? b.participants : []).map((p: Record<string, unknown>) => ({
     playerId: guid(p?.playerId, 'participants.playerId'),
     side: str(p?.side) ?? '',
@@ -507,16 +522,49 @@ route('PUT', 'games/:id', true, async ({ db, req, params }) => {
 });
 
 /** All games with lineups, oldest first (public; used for CSV export). */
-route('GET', 'games', false, async ({ db }) => {
+route('GET', 'games', 'public', async ({ db }) => {
   const [g, p] = await db.batch([db.prepare('SELECT * FROM games ORDER BY played_at, created_at'), db.prepare('SELECT * FROM game_participants')]);
   return json(gameDtos(g.results as GameRow[], p.results as PartRow[]).map(({ createdAt: _c, ...x }) => x));
 });
 
-route('DELETE', 'games/:id', true, async ({ db, params }) => {
+route('DELETE', 'games/:id', 'judge', async ({ db, params, admin }) => {
   const id = guid(params[0], 'id');
+  const g = await db.prepare('SELECT session_id FROM games WHERE id = ?').bind(id).first<{ session_id: string }>();
+  if (g) await requireOpenForJudge(db, admin, g.session_id);
   await db.batch([
+    db.prepare('DELETE FROM game_ratings WHERE game_id = ?').bind(id),
     db.prepare('DELETE FROM game_participants WHERE game_id = ?').bind(id),
     db.prepare('DELETE FROM games WHERE id = ?').bind(id),
+    bump(db),
+  ]);
+  return noContent();
+});
+
+/**
+ * A judge's 1-5 star rating of one player's performance in one game (asked right after saving it).
+ * Upsert keyed by game + player, so an offline replay is harmless. Blended into ratings on read.
+ */
+route('PUT', 'games/:id/ratings/:id', 'judge', async ({ db, req, params, admin }) => {
+  const gameId = guid(params[0], 'gameId');
+  const playerId = guid(params[1], 'playerId');
+  const { stars } = await body<{ stars?: unknown }>(req);
+  if (typeof stars !== 'number' || !Number.isInteger(stars) || stars < 1 || stars > 5)
+    throwIfInvalid([{ code: 'rating.stars', message: 'Stars must be a whole number from 1 to 5.' }]);
+  const [g, part] = await db.batch([
+    db.prepare('SELECT session_id FROM games WHERE id = ?').bind(gameId),
+    db.prepare('SELECT 1 AS x FROM game_participants WHERE game_id = ? AND player_id = ?').bind(gameId, playerId),
+  ]);
+  const game = (g.results as { session_id: string }[])[0];
+  if (!game) throw notFound('game');
+  if (!part.results.length) throwIfInvalid([{ code: 'rating.notInGame', message: 'That player did not play in this game.' }]);
+  await requireOpenForJudge(db, admin, game.session_id);
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO game_ratings (game_id, player_id, stars, rated_by, created_at) VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT (game_id, player_id) DO UPDATE SET stars = excluded.stars, rated_by = excluded.rated_by, created_at = excluded.created_at`,
+      )
+      .bind(gameId, playerId, stars, admin!.id, now()),
     bump(db),
   ]);
   return noContent();
@@ -529,7 +577,7 @@ route('DELETE', 'games/:id', true, async ({ db, params }) => {
  * counting stats to a window; ratings always use the full history. The JSON is cached in D1 for the
  * current data version, so repeated reads between writes cost one row lookup.
  */
-route('GET', 'analytics', false, async ({ db, url }) => {
+route('GET', 'analytics', 'public', async ({ db, url }) => {
   const from = url.searchParams.get('from') ? isoDateTime(url.searchParams.get('from'), 'from') : null;
   const to = url.searchParams.get('to') ? isoDateTime(url.searchParams.get('to'), 'to') : null;
   const key = `${from ?? ''}|${to ?? ''}`;
@@ -540,13 +588,20 @@ route('GET', 'analytics', false, async ({ db, url }) => {
     .first<{ json: string }>();
   if (cached) return new Response(cached.json, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Cache': 'hit' } });
 
-  const [meta, players, games, parts, settingsRow] = await db.batch([
+  const [meta, players, games, parts, settingsRow, ratings] = await db.batch([
     db.prepare('SELECT data_version FROM meta WHERE id = 1'),
     db.prepare('SELECT id FROM players'),
     db.prepare('SELECT id, session_id, played_at, created_at, score_a, score_b, mvp_player_id FROM games'),
     db.prepare('SELECT game_id, player_id, side, position FROM game_participants'),
     db.prepare('SELECT json FROM app_settings WHERE id = 1'),
+    db.prepare('SELECT game_id, player_id, stars FROM game_ratings'),
   ]);
+  const ratingsByGame = new Map<string, { playerId: string; stars: number }[]>();
+  for (const r of ratings.results as { game_id: string; player_id: string; stars: number }[]) {
+    let l = ratingsByGame.get(r.game_id);
+    if (!l) ratingsByGame.set(r.game_id, (l = []));
+    l.push({ playerId: r.player_id, stars: r.stars });
+  }
   const version = (meta.results as { data_version: number }[])[0]?.data_version ?? 0;
   const byGame = new Map<string, GameRecord['participants']>();
   for (const p of parts.results as PartRow[]) {
@@ -563,6 +618,7 @@ route('GET', 'analytics', false, async ({ db, url }) => {
     scoreB: g.score_b,
     mvpPlayerId: g.mvp_player_id,
     participants: byGame.get(g.id) ?? [],
+    judgeRatings: ratingsByGame.get(g.id),
   }));
   const result = compute(
     (players.results as { id: string }[]).map((p) => p.id),
@@ -583,9 +639,9 @@ route('GET', 'analytics', false, async ({ db, url }) => {
   return new Response(text, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Cache': 'miss' } });
 });
 
-route('GET', 'settings', false, async ({ db }) => json(await getSettings(db)));
+route('GET', 'settings', 'public', async ({ db }) => json(await getSettings(db)));
 
-route('PUT', 'settings', true, async ({ db, req }) => {
+route('PUT', 'settings', 'admin', async ({ db, req }) => {
   const raw = await body<Partial<GroupSettings>>(req);
   const s = normalizeSettings(raw);
   throwIfInvalid(validateSettings(s));
@@ -611,14 +667,21 @@ route('PUT', 'settings', true, async ({ db, req }) => {
 
 // ---- auth & admins ---------------------------------------------------------------------------------
 
-route('GET', 'me', false, async ({ admin }) => json({ signedIn: !!admin, isAdmin: !!admin, name: admin?.name ?? null, id: admin?.id ?? null }));
+const meDto = (a: { id: string; name: string; role: Role } | null) => ({
+  signedIn: !!a,
+  isAdmin: a?.role === 'admin',
+  role: a?.role ?? null,
+  name: a?.name ?? null,
+  id: a?.id ?? null,
+});
+route('GET', 'me', 'public', async ({ admin }) => json(meDto(admin)));
 
 /** Exchanges a personal admin code for a session cookie. */
-route('POST', 'auth/login', false, async ({ db, req }) => {
+route('POST', 'auth/login', 'public', async ({ db, req }) => {
   if (!sameOrigin(req)) return errorResponse(403, 'auth.forbidden', 'Cross-site requests are not allowed.');
   const { code } = await body<{ code?: unknown }>(req);
   const c = str(code)?.trim();
-  const found = c && c.length >= 16 && c.length <= 200 ? await db.prepare('SELECT id, name FROM admins WHERE code_hash = ?').bind(await sha256(c)).first<{ id: string; name: string }>() : null;
+  const found = c && c.length >= 16 && c.length <= 200 ? await db.prepare('SELECT id, name, role FROM admins WHERE code_hash = ?').bind(await sha256(c)).first<{ id: string; name: string; role: Role }>() : null;
   if (!found) return errorResponse(401, 'auth.invalidCode', 'This sign-in link is not valid (it may have been replaced).');
   const token = randomToken(32);
   const at = new Date();
@@ -626,17 +689,19 @@ route('POST', 'auth/login', false, async ({ db, req }) => {
     db.prepare('INSERT INTO admin_sessions (token_hash, admin_id, expires_at) VALUES (?, ?, ?)').bind(await sha256(token), found.id, new Date(at.getTime() + SESSION_DAYS * 864e5).toISOString()),
     db.prepare('DELETE FROM admin_sessions WHERE expires_at < ?').bind(at.toISOString()),
   ]);
-  return json({ signedIn: true, isAdmin: true, name: found.name, id: found.id }, 200, { 'Set-Cookie': sessionCookie(req, token) });
+  return json(meDto(found), 200, { 'Set-Cookie': sessionCookie(req, token) });
 });
 
-route('POST', 'auth/logout', false, async ({ db, req, admin }) => {
+route('POST', 'auth/logout', 'public', async ({ db, req, admin }) => {
   if (admin) await db.prepare('DELETE FROM admin_sessions WHERE token_hash = ?').bind(admin.tokenHash).run();
   return noContent({ 'Set-Cookie': sessionCookie(req, null) });
 });
 
-route('GET', 'admins', true, async ({ db, admin }) => {
-  const { results } = await db.prepare('SELECT id, name, created_at FROM admins ORDER BY created_at').all<{ id: string; name: string; created_at: string }>();
-  return json(results.map((a) => ({ id: a.id, name: a.name, createdAt: a.created_at, isYou: a.id === admin!.id })));
+route('GET', 'admins', 'admin', async ({ db, admin }) => {
+  const { results } = await db
+    .prepare("SELECT id, name, role, created_at FROM admins ORDER BY role = 'judge', created_at")
+    .all<{ id: string; name: string; role: Role; created_at: string }>();
+  return json(results.map((a) => ({ id: a.id, name: a.name, role: a.role, createdAt: a.created_at, isYou: a.id === admin!.id })));
 });
 
 function adminName(v: unknown) {
@@ -645,17 +710,18 @@ function adminName(v: unknown) {
   return name!.slice(0, 60);
 }
 
-/** Creates an admin and returns their sign-in code once (never retrievable again). */
-route('POST', 'admins', true, async ({ db, req }) => {
-  const { name } = await body<{ name?: unknown }>(req);
+/** Creates an admin or judge and returns their sign-in code once (never retrievable again). */
+route('POST', 'admins', 'admin', async ({ db, req }) => {
+  const { name, role } = await body<{ name?: unknown; role?: unknown }>(req);
+  const r: Role = role === 'judge' ? 'judge' : 'admin';
   const id = crypto.randomUUID();
   const code = randomToken(24);
-  await db.prepare('INSERT INTO admins (id, name, code_hash, created_at) VALUES (?, ?, ?, ?)').bind(id, adminName(name), await sha256(code), now()).run();
+  await db.prepare('INSERT INTO admins (id, name, role, code_hash, created_at) VALUES (?, ?, ?, ?, ?)').bind(id, adminName(name), r, await sha256(code), now()).run();
   return json({ id, code }, 201);
 });
 
 /** New link for an admin (lost phone, leaked link): the old link stops working and their devices are signed out. */
-route('POST', 'admins/:id/code', true, async ({ db, params }) => {
+route('POST', 'admins/:id/code', 'admin', async ({ db, params }) => {
   const id = guid(params[0], 'id');
   const code = randomToken(24);
   const res = await db.batch([
@@ -666,10 +732,11 @@ route('POST', 'admins/:id/code', true, async ({ db, params }) => {
   return json({ id, code });
 });
 
-route('DELETE', 'admins/:id', true, async ({ db, params }) => {
+route('DELETE', 'admins/:id', 'admin', async ({ db, params }) => {
   const id = guid(params[0], 'id');
-  const count = await db.prepare('SELECT COUNT(*) AS n FROM admins').first<{ n: number }>();
-  if ((count?.n ?? 0) <= 1) throw new ApiException(409, 'admin.last', "You can't remove the last admin.");
+  const target = await db.prepare('SELECT role FROM admins WHERE id = ?').bind(id).first<{ role: Role }>();
+  const count = await db.prepare("SELECT COUNT(*) AS n FROM admins WHERE role = 'admin'").first<{ n: number }>();
+  if (target?.role === 'admin' && (count?.n ?? 0) <= 1) throw new ApiException(409, 'admin.last', "You can't remove the last admin.");
   await db.prepare('DELETE FROM admins WHERE id = ?').bind(id).run();
   return noContent();
 });

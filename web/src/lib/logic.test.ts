@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, type Game } from '../api/types';
+import { DEFAULT_SETTINGS, type Game, type PlayerStats } from '../api/types';
+import { pickRatingCandidate } from './judgeRating';
 import { normalizeArabic, matchesSearch, initials, cardName } from './arabic';
 import { balanceTeams, randomSplit } from './balance';
 import { dreamTeam } from './dreamTeam';
@@ -194,5 +195,26 @@ describe('arabic helpers', () => {
     expect(initials('محمد العتيبي')).toBe('م ع');
     expect(cardName('عبدالعزيز بن عبدالرحمن الشمراني')).toBe('الشمراني');
     expect(cardName('محمد العتيبي', 'أبو فهد')).toBe('أبو فهد');
+  });
+});
+
+describe('pickRatingCandidate', () => {
+  const st = (id: string, judgeRatings: number, games: number, sigma = 3) =>
+    [id, { playerId: id, judgeRatings, sigma, positions: [{ games }] } as unknown as PlayerStats] as const;
+  const parts = ['a', 'b', 'c', 'd'].map((playerId) => ({ playerId }));
+
+  it('never picks the MVP and prefers the fewest judge ratings, then fewest games', () => {
+    const stats = new Map([st('a', 0, 1), st('b', 0, 9), st('c', 2, 0), st('d', 0, 4)]);
+    expect(pickRatingCandidate(parts, 'a', stats)).toBe('d');
+    expect(pickRatingCandidate(parts, null, stats)).toBe('a');
+  });
+
+  it('treats players with no stats yet as the least known', () => {
+    const stats = new Map([st('a', 0, 0), st('b', 0, 0)]);
+    expect(pickRatingCandidate(parts, 'a', stats, () => 0.5)).toBe('c');
+  });
+
+  it('returns null when only the MVP played', () => {
+    expect(pickRatingCandidate([{ playerId: 'a' }], 'a', new Map())).toBeNull();
   });
 });

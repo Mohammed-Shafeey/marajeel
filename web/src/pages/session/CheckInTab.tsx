@@ -40,13 +40,13 @@ export default function CheckInTab({ session }: { session: SessionDetail }) {
   const statsById = new Map((analytics.data?.players ?? []).map((s) => [s.playerId, s]));
 
   const toggle = (id: string) => {
-    if (!auth.isAdmin) return;
+    if (!auth.canEditSession(session.status)) return;
     if (lockedIds.has(id)) return toast(t('checkin.lockedHasGames'), 'info');
     dirty.current = true;
     setPresent((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   };
   const toggleBench = (id: string) => {
-    if (!auth.isAdmin || !present.includes(id)) return;
+    if (!auth.canEditSession(session.status) || !present.includes(id)) return;
     dirty.current = true;
     setManualBench((b) => {
       const n = new Set(b);
@@ -164,7 +164,7 @@ export default function CheckInTab({ session }: { session: SessionDetail }) {
                     onLongPress={() => toggleBench(p.id)}
                     pressed={isPresent}
                     label={`${p.name}${isBench ? ` · ${t('card.benched')}` : ''}`}
-                    disabled={!auth.isAdmin}
+                    disabled={!auth.canEditSession(session.status)}
                   >
                     <MiniCard
                       player={p}
@@ -183,7 +183,7 @@ export default function CheckInTab({ session }: { session: SessionDetail }) {
           </ul>
         )}
       </div>
-      {auth.isAdmin && (
+      {auth.canEditSession(session.status) && (
         <div className="action-bar">
           <Button onClick={() => submit(false)} disabled={save.isPending}>{t('common.save')}</Button>
           <Button variant="primary" disabled={!target || save.isPending} onClick={() => submit(true)}>

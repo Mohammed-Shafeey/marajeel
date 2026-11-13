@@ -9,11 +9,14 @@ import type { Game } from '../api/types';
  */
 export type QueuedOp =
   | { kind: 'putGame'; id: string; game: Game; queuedAt: number; lastError?: string }
-  | { kind: 'deleteGame'; id: string; sessionId: string; queuedAt: number; lastError?: string };
+  | { kind: 'deleteGame'; id: string; sessionId: string; queuedAt: number; lastError?: string }
+  | { kind: 'rateGame'; id: string; gameId: string; playerId: string; stars: number; queuedAt: number; lastError?: string };
 
 export type NewOp =
   | { kind: 'putGame'; id: string; game: Game }
-  | { kind: 'deleteGame'; id: string; sessionId: string };
+  | { kind: 'deleteGame'; id: string; sessionId: string }
+  /** id = `rate:<gameId>:<playerId>`; replayed after the game itself (queued later). */
+  | { kind: 'rateGame'; id: string; gameId: string; playerId: string; stars: number };
 
 const store = createStore('marajeel-offline', 'queue');
 type Listener = (ops: QueuedOp[]) => void;
@@ -48,6 +51,7 @@ export function gameBody(g: Game) {
 
 async function send(op: QueuedOp) {
   if (op.kind === 'putGame') await api(`games/${op.id}`, { method: 'PUT', json: gameBody(op.game) });
+  else if (op.kind === 'rateGame') await api(`games/${op.gameId}/ratings/${op.playerId}`, { method: 'PUT', json: { stars: op.stars } });
   else await api(`games/${op.id}`, { method: 'DELETE' });
 }
 

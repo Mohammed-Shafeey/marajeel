@@ -29,6 +29,23 @@ export const marginWeight = (margin: number) => 1 + 0.5 * clamp((margin - 2) / 8
 
 const sum = (xs: readonly Rating[], f: (r: Rating) => number) => xs.reduce((s, r) => s + f(r), 0);
 
+/**
+ * Judge star rating (1–5) of one game's performance, blended into a skill belief.
+ *
+ * Stars are relative to the player's own level: 3 = played as expected (no change), 5 = two
+ * "steps" above, 1 = two below, one step being half a game's performance noise (β/2). It's treated
+ * as a noisy observation with noise β, so the mean moves by the Kalman gain σ²/(σ²+β²) of the step:
+ * new players (σ≈8.3) move ≈0.8 of it, established ones (σ≈2–3) ≈0.2–0.35. σ is deliberately left
+ * alone, so ratings can't become "certain" from opinions alone; only results tighten them.
+ * Largest effect: a 5-star game moves a brand-new player by ≈+5 display points, an established one ≈+1–2.
+ */
+export const JUDGE_STEP = BETA / 2;
+export function applyJudgeRating(r: Rating, stars: number): Rating {
+  const s = clamp(Math.round(stars), 1, 5);
+  const gain = (r.sigma * r.sigma) / (r.sigma * r.sigma + BETA * BETA);
+  return { mu: r.mu + gain * (s - 3) * JUDGE_STEP, sigma: r.sigma };
+}
+
 /** Probability team A beats team B. */
 export function winProbability(a: readonly Rating[], b: readonly Rating[]): number {
   const n = a.length + b.length;

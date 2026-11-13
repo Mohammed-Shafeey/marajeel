@@ -39,9 +39,13 @@ export function sessionCookie(req: Request, token: string | null): string {
     : `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
 }
 
+export type Role = 'admin' | 'judge';
+
+/** A signed-in admin or judge (both sign in the same way; the role decides what they may change). */
 export interface Admin {
   id: string;
   name: string;
+  role: Role;
   tokenHash: string;
 }
 
@@ -50,9 +54,9 @@ export async function currentAdmin(req: Request, db: D1Database): Promise<Admin 
   if (!token) return null;
   const tokenHash = await sha256(token);
   const row = await db
-    .prepare('SELECT a.id, a.name FROM admin_sessions s JOIN admins a ON a.id = s.admin_id WHERE s.token_hash = ? AND s.expires_at > ?')
+    .prepare('SELECT a.id, a.name, a.role FROM admin_sessions s JOIN admins a ON a.id = s.admin_id WHERE s.token_hash = ? AND s.expires_at > ?')
     .bind(tokenHash, new Date().toISOString())
-    .first<{ id: string; name: string }>();
+    .first<{ id: string; name: string; role: Role }>();
   return row ? { ...row, tokenHash } : null;
 }
 

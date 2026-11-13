@@ -63,13 +63,18 @@ The live database starts empty: add your real players in the app.
 plus *D1: Edit*, then add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Every push to
 `main` then runs the tests, applies migrations and deploys. Without the secrets the deploy step is skipped.
 
-## Admins
+## Admins and judges
 
-Reading is public. Writing needs an admin session:
+Reading is public. Writing needs a signed-in admin or judge:
+
+- **Admins** can change everything.
+- **Judges** run sessions: they can start a new session and, while it is open, edit its check-in, teams and games (including deleting a game).
+  They can't edit players or settings, manage admins, close/reopen a session, or delete one. Closed sessions are read-only for them.
 
 - Each admin has a **personal sign-in link** (`/signin#<code>`). Opening it once signs that device in for 180 days.
   The code lives in the URL fragment, so it never reaches server logs, and the database stores only its SHA-256 hash.
-- Admins add each other under **Settings → Admins**. The new link is shown once, to copy or share privately.
+- Admins add admins and judges under **Settings → Admins & judges**. The new link is shown once, to copy or share privately.
+  From the command line: `node scripts/admin.ts "Name" --judge --remote --url …` creates a judge.
   **New link** replaces a lost or leaked link and signs that admin out everywhere. You can't remove the last admin.
 - Every write route checks the session server-side (`worker/src/index.ts`), and also rejects cross-site requests.
 
@@ -78,6 +83,12 @@ Reading is public. Writing needs an admin session:
 Games are the only source of truth. Every derived number is recomputed by replaying **all games in
 chronological order** (`compute` in `worker/src/core/analytics.ts`) on each read. With hundreds of games that takes milliseconds, so
 correcting a score or changing the algorithm keeps everything consistent. Nothing is updated incrementally.
+
+**Judge star ratings.** After a new game is saved, the judge (or admin) is asked to rate one player on court with 1–5 stars:
+the non-MVP with the fewest judge ratings so far (then fewest games). Skipping is fine. Each rating nudges that player's overall and
+position μ by `gain·(stars−3)·β/2`, where `gain = σ²/(σ²+β²)`, applied right after that game in the replay. 3 stars changes nothing,
+new players move most (a 5-star game ≈ +5 display points), established players ≈ +1–2, and σ is left alone so opinions never make a rating
+look more certain than results do. The average and count show as **Judge score** on the player page.
 
 - **Individual rating:** two-team TrueSkill (μ₀ = 25, σ₀ = 25/3, β = σ₀/2, τ = σ₀/100, no draws). This is an exact
   closed-form port that matches Moserware's `TwoTeamTrueSkillCalculator` (`worker/src/core/trueskill.ts`).

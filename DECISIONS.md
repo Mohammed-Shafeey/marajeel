@@ -30,6 +30,8 @@ Judgment calls made while building, with the simplest reasonable interpretation 
   and the dream team. The API serves the per-player and per-pair numbers it needs.
 - **Photos are stored in D1** as BLOBs (~512 px WebP, tens of KB each) rather than R2, which needs a card on file to enable.
   They're served via `/api/photos/{id}-{version}` with immutable caching. Each upload bumps the version and deletes the old row.
+- **Judges are a role on the same sign-in links** (`admins.role` = `admin` | `judge`). The router has three access levels
+  (public / judge / admin); judges are further limited to open sessions, and only admins can close, reopen or delete one.
 - **Admins sign in with personal links, not passwords or an identity provider.** Cloudflare Access (email codes)
   needs a card on file. Passwords would need slow hashing that doesn't fit the free CPU budget. A random 192-bit code
   needs only SHA-256, can be revoked or replaced per admin, and opening a link is the easiest flow on a phone.
@@ -41,6 +43,12 @@ Judgment calls made while building, with the simplest reasonable interpretation 
 - **Local development is just `npm run dev`**: `wrangler dev` runs the Worker with a local SQLite copy of D1, so there's no Docker or database server.
 
 ## Ratings & stats
+
+- **Judge star ratings are blended into the rating** (organiser's choice), as a small μ-only nudge sized by the player's uncertainty:
+  `Δμ = σ²/(σ²+β²) · (stars−3) · β/2`. Stars are relative to the player's usual level (3 = as expected). σ is unchanged, so a rating
+  can't tighten from opinions alone and a harsh judge can't move an established player much. One prompt per new game, for the
+  non-MVP on court with the fewest judge ratings (then fewest games, then highest σ, then random). Ratings are stored per
+  game + player (`game_ratings`), queued offline like game writes, and ignored if the lineup is later edited to drop that player.
 
 - **0–100 mapping**: `40 + 1.5·(μ − 3σ)`, clamped. See the README.
 - **Win probability from team ratings** (court/balancer): `Φ((n·Δ/1.5) / (√(2n)·√2·β))`, consistent with the display

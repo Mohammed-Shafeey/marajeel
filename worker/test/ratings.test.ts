@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compute } from '../src/core/analytics.ts';
 import { DEFAULT_SETTINGS as S } from '../src/core/settings.ts';
-import { defaultRating, INITIAL_MU, INITIAL_SIGMA, marginWeight, toDisplay, update, winProbability, type Rating } from '../src/core/trueskill.ts';
+import { applyJudgeRating, defaultRating, INITIAL_MU, INITIAL_SIGMA, marginWeight, toDisplay, update, winProbability, type Rating } from '../src/core/trueskill.ts';
 import { Fixture } from './fixture.ts';
 
 const team = (r: Rating = defaultRating(), n = 6) => Array.from({ length: n }, () => ({ ...r }));
@@ -118,5 +118,44 @@ describe('replay', () => {
     expect(month.wins).toBe(0);
     expect(month.mu).toBe(all.mu);
     expect(month.ratingDelta).toBeLessThan(0);
+  });
+});
+
+describe('Judge star ratings', () => {
+  it('3 stars changes nothing; 5 stars raises and 1 star lowers μ, σ untouched', () => {
+    const r = { mu: 25, sigma: 5 };
+    expect(applyJudgeRating(r, 3)).toEqual(r);
+    expect(applyJudgeRating(r, 5).mu).toBeGreaterThan(25);
+    expect(applyJudgeRating(r, 1).mu).toBeLessThan(25);
+    expect(applyJudgeRating(r, 5).sigma).toBe(5);
+    expect(applyJudgeRating(r, 5).mu - 25).toBeCloseTo(25 - applyJudgeRating(r, 1).mu, 12);
+  });
+
+  it('moves uncertain (new) players more than established ones', () => {
+    const fresh = applyJudgeRating({ mu: 25, sigma: INITIAL_SIGMA }, 5).mu - 25;
+    const settled = applyJudgeRating({ mu: 25, sigma: 2 }, 5).mu - 25;
+    expect(fresh).toBeGreaterThan(2 * settled);
+  });
+
+  it('is blended into the replay and counted per player', () => {
+    const f = new Fixture();
+    const g = f.add(Fixture.A, Fixture.B, 15, 12);
+    const before = stats(compute(f.players, f.games, S), f.p(1));
+    f.games[0] = { ...g, judgeRatings: [{ playerId: f.p(1), stars: 5 }, { playerId: f.p(7), stars: 1 }] };
+    const r = compute(f.players, f.games, S);
+    const p1 = stats(r, f.p(1));
+    expect(p1.mu).toBeGreaterThan(before.mu);
+    expect(p1.positions[0].mu).toBeGreaterThan(before.positions[0].mu);
+    expect(p1.judgeRatings).toBe(1);
+    expect(p1.judgeAvg).toBe(5);
+    expect(stats(r, f.p(7)).mu).toBeLessThan(stats(compute(f.players, [g], S), f.p(7)).mu);
+    expect(stats(r, f.p(2)).judgeAvg).toBeNull();
+  });
+
+  it('ignores a rating for someone no longer in the lineup', () => {
+    const f = new Fixture(13);
+    const g = f.add(Fixture.A, Fixture.B, 15, 12);
+    const withStray = { ...g, judgeRatings: [{ playerId: f.p(12), stars: 5 }] };
+    expect(stats(compute(f.players, [withStray], S), f.p(12)).judgeRatings).toBe(0);
   });
 });

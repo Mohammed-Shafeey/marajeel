@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 
+export type Role = 'admin' | 'judge';
+
 export interface Me {
   signedIn: boolean;
   isAdmin: boolean;
+  role: Role | null;
   name: string | null;
   id: string | null;
 }
@@ -28,7 +31,21 @@ export function useAuth() {
     retry: false,
   });
   const me = q.data ?? null;
-  return { loading: q.isLoading, signedIn: !!me?.signedIn, isAdmin: !!me?.isAdmin, name: me?.name ?? null, id: me?.id ?? null };
+  const isAdmin = !!me?.isAdmin;
+  const isJudge = me?.role === 'judge';
+  return {
+    loading: q.isLoading,
+    signedIn: !!me?.signedIn,
+    isAdmin,
+    isJudge,
+    role: me?.role ?? null,
+    /** Can start sessions (admins and judges). */
+    canRun: isAdmin || isJudge,
+    /** Can change this session's check-in, teams and games: admins always, judges only while it's open. */
+    canEditSession: (status: string | undefined) => isAdmin || (isJudge && status === 'open'),
+    name: me?.name ?? null,
+    id: me?.id ?? null,
+  };
 }
 
 export function useSignIn() {
@@ -43,7 +60,7 @@ export function useSignOut() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api<void>('auth/logout', { method: 'POST' }),
-    onSuccess: () => qc.setQueryData(ME, { signedIn: false, isAdmin: false, name: null, id: null } satisfies Me),
+    onSuccess: () => qc.setQueryData(ME, { signedIn: false, isAdmin: false, role: null, name: null, id: null } satisfies Me),
   });
 }
 
@@ -52,6 +69,7 @@ export function useSignOut() {
 export interface AdminInfo {
   id: string;
   name: string;
+  role: Role;
   createdAt: string;
   isYou: boolean;
 }
@@ -64,7 +82,7 @@ export const signInLink = (code: string) => `${location.origin}/signin#${code}`;
 export function useAddAdmin() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) => api<{ id: string; code: string }>('admins', { method: 'POST', json: { name } }),
+    mutationFn: ({ name, role }: { name: string; role: Role }) => api<{ id: string; code: string }>('admins', { method: 'POST', json: { name, role } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ADMINS }),
   });
 }

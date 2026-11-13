@@ -35,7 +35,7 @@ export default function GamesTab({ session }: { session: SessionDetail }) {
             title={t('game.noGames')}
             hint={session.teams.length ? t('game.noGamesHint') : t('game.needTeams')}
             action={
-              auth.isAdmin &&
+              auth.canEditSession(session.status) &&
               (session.teams.length ? (
                 <Button variant="primary" onClick={() => nav(`/sessions/${session.id}/games/new`)}>{t('game.record')}</Button>
               ) : (
@@ -98,7 +98,7 @@ export default function GamesTab({ session }: { session: SessionDetail }) {
           </>
         )}
       </div>
-      {auth.isAdmin && session.teams.length > 0 && session.games.length > 0 && (
+      {auth.canEditSession(session.status) && session.teams.length > 0 && session.games.length > 0 && (
         <div className="action-bar">
           <Button variant="primary" onClick={() => nav(`/sessions/${session.id}/games/new`)}>
             <IconPlus /> {t('game.record')}

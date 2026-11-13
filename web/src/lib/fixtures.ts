@@ -36,6 +36,8 @@ export function syntheticAnalytics(n: number, seed = 1, opts: { provisionalEvery
       gamesBySession: {},
       ratingDelta: 0,
       lastPlayedAt: null,
+      judgeRatings: 0,
+      judgeAvg: null,
     };
   });
   return { players, pairs: [], sessionMvps: {}, gameCount: 0, from: null, to: null };

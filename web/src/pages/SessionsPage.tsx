@@ -30,8 +30,10 @@ export default function SessionsPage() {
         title={t('app.name')}
         actions={
           !auth.loading &&
-          (auth.isAdmin ? (
-            <span className="bg-brand px-2 py-1 font-display text-caption font-extrabold uppercase text-on-brand">{t('settings.admin')}</span>
+          (auth.canRun ? (
+            <span className={`px-2 py-1 font-display text-caption font-extrabold uppercase ${auth.isAdmin ? 'bg-brand text-on-brand' : 'bg-cyan text-on-cyan'}`}>
+              {auth.isAdmin ? t('settings.admin') : t('settings.judge')}
+            </span>
           ) : (
             <Link to="/signin" className="px-2 text-small font-semibold text-[#C3C2CB] underline">
               {t('common.signIn')}
@@ -49,7 +51,7 @@ export default function SessionsPage() {
             icon={<IconCalendar size={40} />}
             title={t('sessions.empty')}
             hint={t('sessions.emptyHint')}
-            action={auth.isAdmin && <Button variant="primary" onClick={() => setCreating(true)}>{t('sessions.new')}</Button>}
+            action={auth.canRun && <Button variant="primary" onClick={() => setCreating(true)}>{t('sessions.new')}</Button>}
           />
         ) : (
           <>
@@ -89,7 +91,7 @@ export default function SessionsPage() {
           </>
         )}
       </div>
-      {auth.isAdmin && (sessions.data?.length ?? 0) > 0 && (
+      {auth.canRun && (sessions.data?.length ?? 0) > 0 && (
         <div className="action-bar">
           <Button variant="primary" onClick={() => setCreating(true)}>
             <IconPlus /> {t('sessions.new')}
@@ -119,7 +121,7 @@ function LiveTile({ s }: { s: SessionSummary }) {
         </span>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        {auth.isAdmin && hasTeams ? (
+        {auth.canEditSession(s.status) && hasTeams ? (
           <button type="button" className="btn btn-outline shadow-pop" onClick={() => nav(`/sessions/${s.id}/games/new`)}>
             {t('sessions.recordNext')} <IconChevron size={18} />
           </button>
@@ -128,7 +130,7 @@ function LiveTile({ s }: { s: SessionSummary }) {
             {t('sessions.openSession')} <IconChevron size={18} />
           </button>
         )}
-        {auth.isAdmin && hasTeams && (
+        {auth.canEditSession(s.status) && hasTeams && (
           <Link to={`/sessions/${s.id}/games`} className="btn btn-ink">
             <Num n={s.gameCount} /> · {t('sessions.tabs.games')}
           </Link>

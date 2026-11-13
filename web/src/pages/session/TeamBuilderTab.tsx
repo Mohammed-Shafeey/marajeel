@@ -34,7 +34,7 @@ export default function TeamBuilderTab({ session }: { session: SessionDetail }) 
   const sensors = useCourtSensors();
   const template = settings.positionTemplate;
   const size = template.length;
-  const editable = auth.isAdmin;
+  const editable = auth.canEditSession(session.status);
 
   const [draft, setDraft] = useState(() => initialDraft(session, size, t));
   const [selected, setSelected] = useState<string | null>(null);

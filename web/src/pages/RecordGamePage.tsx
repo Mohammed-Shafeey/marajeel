@@ -2,14 +2,15 @@ import { DndContext, DragOverlay, useDraggable, type DragEndEvent } from '@dnd-k
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useDeleteGame, usePlayers, useRatingContext, useSaveGame, useSession, useSettings } from '../api/hooks';
-import type { Game, SessionDetail, Team } from '../api/types';
+import { useDeleteGame, usePlayers, useRatePlayer, useRatingContext, useSaveGame, useSession, useSettings } from '../api/hooks';
+import type { Game, Player, SessionDetail, Team } from '../api/types';
 import { useAuth } from '../auth/useAuth';
-import { MiniCard } from '../components/cards';
+import { Avatar, MiniCard } from '../components/cards';
 import { Court, TeamBand, WinProbBar, parseDragId, useCourtSensors, type CourtSide } from '../components/Court';
-import { IconMinus, IconPlus, IconSync, IconTrash } from '../components/icons';
-import { Button, ErrorState, IconButton, LoadingList, SectionTitle, TopBar, errorMessage, translateCode, useConfirm, useToast } from '../components/ui';
+import { IconMinus, IconPlus, IconStar, IconSync, IconTrash } from '../components/icons';
+import { Button, ErrorState, IconButton, LoadingList, SectionTitle, Sheet, TopBar, errorMessage, translateCode, useConfirm, useToast } from '../components/ui';
 import { fmtNum } from '../i18n';
+import { pickRatingCandidate } from '../lib/judgeRating';
 import { newGuid } from '../lib/rng';
 import { teamRating, winProbability } from '../lib/teamRating';
 import { scoreLooksFinished, validateGame } from '../lib/validation';
@@ -55,7 +56,7 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
   const saveGame = useSaveGame();
   const deleteGame = useDeleteGame();
   const sensors = useCourtSensors();
-  const editable = auth.isAdmin;
+  const editable = auth.canEditSession(session.status);
   const template = settings.positionTemplate;
 
   const [[teamAId, teamBId], setTeams] = useState<[string, string]>(() => (existing ? [existing.teamAId, existing.teamBId] : defaultTeams(session)));
@@ -72,6 +73,9 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
   const [showChem, setShowChem] = useState(true);
   const [dragId, setDragId] = useState<string | null>(null);
   const [id] = useState(() => existing?.id ?? newGuid());
+  /** After saving a new game: the player the judge is asked to rate (null = no prompt). */
+  const [rateId, setRateId] = useState<string | null>(null);
+  const backToGames = () => nav(`/sessions/${session.id}/games`, { replace: true });
 
   const teamA = session.teams.find((x) => x.id === teamAId) as Team;
   const teamB = session.teams.find((x) => x.id === teamBId) as Team;
@@ -154,7 +158,10 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
     saveGame.mutate(g, {
       onSuccess: (sent) => {
         toast(sent ? t('common.saved') : t('game.saveQueued'), sent ? 'ok' : 'info');
-        nav(`/sessions/${session.id}/games`, { replace: true });
+        // New games only: ask about one non-MVP player we know least about.
+        const candidate = existing ? null : pickRatingCandidate(g.participants, g.mvpPlayerId, ctx.stats);
+        if (candidate) setRateId(candidate);
+        else backToGames();
       },
       onError: (e) => toast(errorMessage(e, t), 'error'),
     });
@@ -285,14 +292,67 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
         {draggingPlayer ? <MiniCard player={playerMap.get(draggingPlayer)} stats={ctx.stats.get(draggingPlayer)} settings={settings} dragging /> : null}
       </DragOverlay>
 
+      {rateId && <RatePlayerSheet gameId={id} player={playerMap.get(rateId)} playerId={rateId} onDone={backToGames} />}
+
       {editable && (
         <div className="action-bar">
-          <Button variant="primary" disabled={saveGame.isPending} onClick={() => void submit()}>
+          <Button variant="primary" disabled={saveGame.isPending || !!rateId} onClick={() => void submit()}>
             {t('game.save')}
           </Button>
         </div>
       )}
     </DndContext>
+  );
+}
+
+/** Post-game prompt: one tap of 1–5 stars for one player, or skip. Blended into their rating. */
+function RatePlayerSheet({ gameId, playerId, player, onDone }: { gameId: string; playerId: string; player: Player | undefined; onDone: () => void }) {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const rate = useRatePlayer();
+  const name = player?.name ?? t('common.unknownPlayer');
+  const choose = (stars: number) =>
+    rate.mutate(
+      { gameId, playerId, stars },
+      {
+        onSuccess: (sent) => {
+          toast(sent ? t('rate.saved') : t('rate.queued'), sent ? 'ok' : 'info');
+          onDone();
+        },
+        onError: (e) => {
+          toast(errorMessage(e, t), 'error');
+          onDone();
+        },
+      },
+    );
+  return (
+    <Sheet
+      open
+      onClose={onDone}
+      title={t('rate.title')}
+      footer={<Button variant="ghost" disabled={rate.isPending} onClick={onDone}>{t('rate.skip')}</Button>}
+    >
+      <div className="flex flex-col items-center gap-3 text-center">
+        <Avatar player={player} size={72} />
+        <p className="font-display text-h2 font-extrabold">{t('rate.question', { name })}</p>
+        <div className="flex gap-1" role="group" aria-label={t('rate.question', { name })}>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              disabled={rate.isPending}
+              aria-label={t('rate.star', { n, of: 5 })}
+              className="flex h-14 w-14 flex-col items-center justify-center text-brand hover:bg-surface-2 disabled:opacity-50"
+              onClick={() => choose(n)}
+            >
+              <IconStar size={34} />
+              <span className="num text-caption font-bold text-fg-2">{fmtNum(n)}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-small text-fg-2">{t('rate.hint')}</p>
+      </div>
+    </Sheet>
   );
 }
 

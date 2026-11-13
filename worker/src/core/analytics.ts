@@ -1,5 +1,5 @@
 import type { GroupSettings } from './settings.ts';
-import { defaultRating, marginWeight, toDisplay, update, winProbability, type Rating } from './trueskill.ts';
+import { applyJudgeRating, defaultRating, marginWeight, toDisplay, update, winProbability, type Rating } from './trueskill.ts';
 
 export type Side = 'A' | 'B';
 
@@ -18,6 +18,8 @@ export interface GameRecord {
   scoreB: number;
   mvpPlayerId: string;
   participants: ParticipantRecord[];
+  /** Judges' 1–5 star ratings of individual players in this game (optional). */
+  judgeRatings?: { playerId: string; stars: number }[];
 }
 
 export interface RatingPoint {
@@ -55,6 +57,9 @@ export interface PlayerStats {
   gamesBySession: Record<string, number>;
   ratingDelta: number;
   lastPlayedAt: string | null;
+  /** Number of judge star ratings received (all time) and their average, or null if none. */
+  judgeRatings: number;
+  judgeAvg: number | null;
 }
 
 export interface PairStats {
@@ -109,6 +114,8 @@ class Acc {
   lastPlayedAt: string | null = null;
   bySession: Record<string, number> = {};
   history: RatingPoint[] = [];
+  judgeCount = 0;
+  judgeSum = 0;
   pos(p: number): PosAcc {
     let x = this.positions.get(p);
     if (!x) this.positions.set(p, (x = { rating: defaultRating(), games: 0, wins: 0 }));
@@ -244,6 +251,18 @@ export function compute(
       x.games++;
     });
 
+    // Judge ratings nudge both the overall and the position track for the position played.
+    for (const jr of g.judgeRatings ?? []) {
+      const part = g.participants.find((p) => p.playerId === jr.playerId);
+      if (!part) continue; // lineup was edited after rating: ignore
+      const a = get(jr.playerId);
+      a.overall = applyJudgeRating(a.overall, jr.stars);
+      const x = a.pos(part.position);
+      x.rating = applyJudgeRating(x.rating, jr.stars);
+      a.judgeCount++;
+      a.judgeSum += jr.stars;
+    }
+
     for (const p of g.participants) {
       const a = get(p.playerId);
       a.totalGames++;
@@ -286,6 +305,8 @@ export function compute(
       gamesBySession: a.bySession,
       ratingDelta: a.ratingAtWindowStart !== null ? rating - a.ratingAtWindowStart : 0,
       lastPlayedAt: a.lastPlayedAt,
+      judgeRatings: a.judgeCount,
+      judgeAvg: a.judgeCount ? a.judgeSum / a.judgeCount : null,
     };
   });
 
