@@ -9,7 +9,7 @@ import { IconEdit } from '../components/icons';
 import { ErrorState, IconButton, LoadingList, SectionTitle, Segmented, Skeleton, TopBar } from '../components/ui';
 import { RatingChart } from '../components/RatingChart';
 import { fmtDate, fmtNum, fmtPct, fmtSigned } from '../i18n';
-import { compareNames } from '../lib/arabic';
+import { compareNames, displayName } from '../lib/arabic';
 import { tierOf } from '../lib/teamRating';
 import PlayerEditSheet from './PlayerEditSheet';
 
@@ -60,7 +60,8 @@ export default function PlayerDetailPage() {
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 sm:flex-row sm:items-end">
           <PlayerCard player={player} stats={statsAll} settings={settings} team="a" className="card-reveal" />
           <div className="flex flex-col items-center gap-2 sm:items-start">
-            <h2 className="mb-2 font-display text-h1 font-extrabold !leading-snug">{player.name}</h2>
+            <h2 className="font-display text-h1 font-extrabold !leading-snug">{displayName(player.name)}</h2>
+            {displayName(player.name) !== player.name.trim() && <p className="-mt-1 mb-2 text-small opacity-80">{player.name}</p>}
             <div className="flex flex-wrap items-center justify-center gap-2 text-small font-semibold">
               <span className="bg-ink px-2 py-0.5 text-on-ink">{t(`card.${tier === 'prov' ? 'provisional' : tier}`, { n: statsAll?.games ?? 0, of: settings.provisionalGames })}</span>
               {statsAll?.bestPosition && <span>{t('players.bestPosition', { pos: t(`pos.${statsAll.bestPosition}`) })}</span>}
@@ -147,7 +148,7 @@ export default function PlayerDetailPage() {
                 const l = p.against.games - w;
                 return (
                   <li key={other(p)} className="flex items-center gap-2">
-                    <span className="w-28 truncate text-small font-semibold">{t('player.h2hAgainst', { name: playerMap.get(other(p))?.name.split(' ')[0] ?? '?' })}</span>
+                    <span className="w-28 truncate text-small font-semibold">{t('player.h2hAgainst', { name: displayName(playerMap.get(other(p))?.name ?? '?') })}</span>
                     <div className="flex h-6 flex-1 overflow-hidden" aria-label={t('player.record', { w, l })}>
                       <div className="flex items-center justify-center bg-win text-caption font-bold text-white" style={{ width: `${(w / p.against.games) * 100}%` }}>{w > 0 && fmtNum(w)}</div>
                       <div className="flex items-center justify-center bg-loss text-caption font-bold text-white" style={{ width: `${(l / p.against.games) * 100}%` }}>{l > 0 && fmtNum(l)}</div>
@@ -157,13 +158,13 @@ export default function PlayerDetailPage() {
               })}
             </ul>
           )}
-          <p className="mt-2 text-caption text-fg-3">{t('player.h2hLegend', { name: player.name.split(' ')[0] })}</p>
+          <p className="mt-2 text-caption text-fg-3">{t('player.h2hLegend', { name: displayName(player.name) })}</p>
 
           <label className="field-label mt-4" htmlFor="cmp">{t('player.compare')}</label>
           <select id="cmp" className="w-full" value={compareId} onChange={(e) => setCompareId(e.target.value)}>
             <option value="">—</option>
             {(players.data ?? []).filter((p) => p.id !== id).sort((a, b) => compareNames(a.name, b.name)).map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>{displayName(p.name)}</option>
             ))}
           </select>
           {compareId && (
@@ -214,7 +215,7 @@ function PairRow({ player, pair }: { player?: Player; pair: PairStats }) {
       <Link to={player ? `/players/${player.id}` : '#'} className="flex min-h-[60px] items-center gap-3 px-3">
         <Avatar player={player} size={40} />
         <div className="min-w-0 flex-1">
-          <div className="truncate font-bold">{player?.name ?? t('common.unknownPlayer')}</div>
+          <div className="truncate font-bold">{player ? displayName(player.name) : t('common.unknownPlayer')}</div>
           <div className="text-caption text-fg-2">
             {t('player.togetherLine', { games: t('count.games', { count: pair.together.games }), pct: fmtPct(pair.together.wins / pair.together.games) })}
           </div>

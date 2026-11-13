@@ -8,6 +8,7 @@ import { Num } from '../components/cards';
 import { IconCalendar, IconChevron, IconPlus } from '../components/icons';
 import { Button, EmptyState, ErrorState, LoadingList, SectionTitle, Sheet, TopBar, errorMessage, useToast } from '../components/ui';
 import { fmtDate, fmtWeekday } from '../i18n';
+import { displayName } from '../lib/arabic';
 
 export const sessionName = (s: { date: string }, t: (k: string, o?: Record<string, unknown>) => string) =>
   t('sessions.defaultName', { day: fmtWeekday(s.date) });
@@ -20,7 +21,10 @@ export default function SessionsPage() {
   const analytics = useAnalytics('all');
   const [creating, setCreating] = useState(false);
 
-  const playerName = (id?: string) => players.data?.find((p) => p.id === id)?.name;
+  const playerName = (id?: string) => {
+    const n = players.data?.find((p) => p.id === id)?.name;
+    return n ? displayName(n) : undefined;
+  };
   const live = sessions.data?.find((s) => s.status === 'open');
   const past = sessions.data?.filter((s) => s !== live) ?? [];
 

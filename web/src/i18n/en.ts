@@ -62,6 +62,7 @@ const en: DeepPartialStrings<Resources> & Record<string, unknown> = {
   game: {
     title: 'Game {{n, num}}', record: 'Record game', edit: 'Edit game', chooseTeams: 'Choose the two teams',
     modified_one: 'Modified lineup · 1 change', modified_other: 'Modified lineup · {{count, num}} changes', modified_zero: 'Base lineup',
+    fullscreen: 'Full-screen scoreboard', scoreboard: 'Scoreboard', swapSides: 'Swap sides',
     resetToBase: 'Base', resting: '{{team}} resting', winProb: 'Win probability', firstTo: 'First to {{n, num}}', winByTwo: 'win by 2',
     pickMvp: 'Tap a player to pick the MVP', mvp: 'MVP', save: 'Save', saveQueued: 'Saved — waiting to sync',
     deleteConfirm: 'Delete this game? Ratings will be recomputed.', notFinished: "Score hasn't reached {{n, num}} — save anyway?",
@@ -114,8 +115,10 @@ const en: DeepPartialStrings<Resources> & Record<string, unknown> = {
     removeConfirm: 'Remove {{name}}?', resetConfirm: 'Make a new link for {{name}}? Their old link stops working and their devices are signed out.',
   },
   rate: {
-    title: 'Rate a player', question: 'How well did {{name}} play this game?',
-    hint: 'A quick rating helps us place players we have little data on. 3 stars = their usual level.',
+    title: 'Rate a performance', question: 'How did {{name}} play this game?', compared: 'Compared with their usual level', save: 'Save rating',
+    hint: 'This is relative: compared with this player’s usual level, not with others. “Usual level” leaves their rating unchanged.',
+    level: { '5': 'Exceptional', '4': 'Above their level', '3': 'Usual level', '2': 'Below their level', '1': 'Off day' },
+    levelHint: { '5': 'Best game you’ve seen from them', '4': 'Played better than usual', '3': 'What we expect from them', '2': 'Weaker than usual', '1': 'Far from their level' },
     star: '{{n, num}} of {{of, num}}', skip: 'Skip', saved: 'Thanks — rating saved', queued: 'The rating will be sent when you’re back online',
     judgeScore: 'Judge score', judgeCount: 'from {{n, num}} ratings', none: 'No ratings yet',
   },

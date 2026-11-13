@@ -8,6 +8,7 @@ import { IconTrophy } from '../components/icons';
 import { EmptyState, ErrorState, LoadingList, Segmented, TopBar } from '../components/ui';
 import { fmtNum, fmtPct, fmtSigned } from '../i18n';
 import { POSITIONS } from '../lib/positions';
+import { displayName } from '../lib/arabic';
 
 type TabKey = 'overall' | 'positions' | 'mvp' | 'streaks' | 'games' | 'pairs';
 const TABS: TabKey[] = ['overall', 'positions', 'mvp', 'streaks', 'games', 'pairs'];
@@ -44,7 +45,7 @@ export default function LeaderboardsPage() {
   const name = (r: { player: Player }) => (
     <Link to={`/players/${r.player.id}`} className="flex min-w-0 items-center gap-2 py-1">
       <Avatar player={r.player} size={32} />
-      <span className="truncate font-bold">{r.player.name}</span>
+      <span className="truncate font-bold">{displayName(r.player.name)}</span>
     </Link>
   );
   const nameCol: Col<Row> = { key: 'name', label: t('boards.player'), value: (r) => r.player.name, render: name };

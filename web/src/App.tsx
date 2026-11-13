@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { invalidateDerived, useQueue } from './api/hooks';
 import { IconCalendar, IconSliders, IconStar, IconSync, IconTrophy, IconUsers } from './components/icons';
 import { translateCode, useToast } from './components/ui';
@@ -30,6 +30,7 @@ export default function App() {
   const { prefs } = usePrefs();
   const loc = useLocation();
   useOfflineSync();
+  useScrollToTop();
 
   return (
     <div className="tx-concrete min-h-dvh lg:ps-[240px]">
@@ -62,6 +63,15 @@ export default function App() {
       </nav>
     </div>
   );
+}
+
+/** New pages open at the top (the browser would otherwise keep the previous page's scroll); Back/Forward keep theirs. */
+function useScrollToTop() {
+  const { pathname } = useLocation();
+  const type = useNavigationType();
+  useEffect(() => {
+    if (type !== 'POP') window.scrollTo(0, 0);
+  }, [pathname, type]);
 }
 
 const isActive = (to: string, path: string) => (to === '/' ? path === '/' || path.startsWith('/sessions') : path.startsWith(to));

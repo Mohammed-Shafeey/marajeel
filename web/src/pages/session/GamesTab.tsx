@@ -8,7 +8,7 @@ import { Avatar, Num } from '../../components/cards';
 import { IconBall, IconChevron, IconPlus, IconSync } from '../../components/icons';
 import { Button, EmptyState, SectionTitle } from '../../components/ui';
 import { fmtNum } from '../../i18n';
-import { firstName } from '../../lib/arabic';
+import { displayName } from '../../lib/arabic';
 
 export default function GamesTab({ session }: { session: SessionDetail }) {
   const { t } = useTranslation();
@@ -67,7 +67,7 @@ export default function GamesTab({ session }: { session: SessionDetail }) {
                       </div>
                       <div className="flex items-center gap-2 text-small">
                         <span className="bg-volt px-1 font-display text-[11px] font-extrabold text-on-volt">MVP</span>
-                        <span className="truncate font-semibold">{mvp?.name ?? '—'}</span>
+                        <span className="truncate font-semibold">{mvp ? displayName(mvp.name) : '—'}</span>
                         {g.pending && (
                           <span className="ms-auto flex items-center gap-1 bg-volt px-1 text-caption font-bold text-on-volt">
                             <IconSync size={12} /> {t('game.pending')}
@@ -90,7 +90,7 @@ export default function GamesTab({ session }: { session: SessionDetail }) {
               {counts.map(([id, n]) => (
                 <li key={id} className="flex min-h-[40px] items-center gap-2">
                   <Avatar player={playerMap.get(id)} size={28} />
-                  <span className="flex-1 truncate text-small font-semibold">{firstName(playerMap.get(id)?.name ?? '')}</span>
+                  <span className="flex-1 truncate text-small font-semibold">{displayName(playerMap.get(id)?.name ?? '')}</span>
                   <span className={`num font-extrabold ${n < avg - 1.5 ? 'text-loss' : ''}`}>{fmtNum(n)}</span>
                 </li>
               ))}

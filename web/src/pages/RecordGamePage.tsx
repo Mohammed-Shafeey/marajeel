@@ -3,12 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDeleteGame, usePlayers, useRatePlayer, useRatingContext, useSaveGame, useSession, useSettings } from '../api/hooks';
-import type { Game, Player, SessionDetail, Team } from '../api/types';
+import type { Game, GroupSettings, Player, PlayerStats, SessionDetail, Team } from '../api/types';
 import { useAuth } from '../auth/useAuth';
-import { Avatar, MiniCard } from '../components/cards';
+import { MiniCard } from '../components/cards';
+import { RateSheet } from '../components/RateSheet';
 import { Court, TeamBand, WinProbBar, parseDragId, useCourtSensors, type CourtSide } from '../components/Court';
-import { IconMinus, IconPlus, IconStar, IconSync, IconTrash } from '../components/icons';
-import { Button, ErrorState, IconButton, LoadingList, SectionTitle, Sheet, TopBar, errorMessage, translateCode, useConfirm, useToast } from '../components/ui';
+import { IconExpand, IconMinus, IconPlus, IconSync, IconTrash } from '../components/icons';
+import { ScoreFullscreen } from '../components/ScoreFullscreen';
+import { Button, ErrorState, IconButton, LoadingList, SectionTitle, TopBar, errorMessage, translateCode, useConfirm, useToast } from '../components/ui';
 import { fmtNum } from '../i18n';
 import { pickRatingCandidate } from '../lib/judgeRating';
 import { newGuid } from '../lib/rng';
@@ -75,6 +77,7 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
   const [id] = useState(() => existing?.id ?? newGuid());
   /** After saving a new game: the player the judge is asked to rate (null = no prompt). */
   const [rateId, setRateId] = useState<string | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const backToGames = () => nav(`/sessions/${session.id}/games`, { replace: true });
 
   const teamA = session.teams.find((x) => x.id === teamAId) as Team;
@@ -268,6 +271,11 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
             <ScoreBox team={teamA} value={scoreA} onChange={setScoreA} winner={scoreA > scoreB} editable={editable} />
             <ScoreBox team={teamB} value={scoreB} onChange={setScoreB} winner={scoreB > scoreA} editable={editable} />
           </div>
+          {editable && (
+            <Button className="mt-3 w-full" onClick={() => setFullscreen(true)}>
+              <IconExpand size={20} /> {t('game.fullscreen')}
+            </Button>
+          )}
           <p className="mt-2 text-small text-fg-2">
             {t('game.firstTo', { n: settings.targetScore })}
             {settings.winByTwo ? ` ${t('game.winByTwo')}` : ''}
@@ -292,7 +300,10 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
         {draggingPlayer ? <MiniCard player={playerMap.get(draggingPlayer)} stats={ctx.stats.get(draggingPlayer)} settings={settings} dragging /> : null}
       </DragOverlay>
 
-      {rateId && <RatePlayerSheet gameId={id} player={playerMap.get(rateId)} playerId={rateId} onDone={backToGames} />}
+      {fullscreen && (
+        <ScoreFullscreen teamA={teamA} teamB={teamB} scoreA={scoreA} scoreB={scoreB} setScoreA={setScoreA} setScoreB={setScoreB} onClose={() => setFullscreen(false)} />
+      )}
+      {rateId && <RatePlayer gameId={id} playerId={rateId} player={playerMap.get(rateId)} stats={ctx.stats.get(rateId)} settings={settings} onDone={backToGames} />}
 
       {editable && (
         <div className="action-bar">
@@ -305,13 +316,12 @@ function GameEditor({ session, existing }: { session: SessionDetail; existing?: 
   );
 }
 
-/** Post-game prompt: one tap of 1–5 stars for one player, or skip. Blended into their rating. */
-function RatePlayerSheet({ gameId, playerId, player, onDone }: { gameId: string; playerId: string; player: Player | undefined; onDone: () => void }) {
+/** Post-game prompt (see RateSheet): saves the rating (queued offline if needed), then returns to the games list. */
+function RatePlayer({ gameId, playerId, player, stats, settings, onDone }: { gameId: string; playerId: string; player: Player | undefined; stats: PlayerStats | undefined; settings: GroupSettings; onDone: () => void }) {
   const { t } = useTranslation();
   const toast = useToast();
   const rate = useRatePlayer();
-  const name = player?.name ?? t('common.unknownPlayer');
-  const choose = (stars: number) =>
+  const save = (stars: number) =>
     rate.mutate(
       { gameId, playerId, stars },
       {
@@ -325,35 +335,7 @@ function RatePlayerSheet({ gameId, playerId, player, onDone }: { gameId: string;
         },
       },
     );
-  return (
-    <Sheet
-      open
-      onClose={onDone}
-      title={t('rate.title')}
-      footer={<Button variant="ghost" disabled={rate.isPending} onClick={onDone}>{t('rate.skip')}</Button>}
-    >
-      <div className="flex flex-col items-center gap-3 text-center">
-        <Avatar player={player} size={72} />
-        <p className="font-display text-h2 font-extrabold">{t('rate.question', { name })}</p>
-        <div className="flex gap-1" role="group" aria-label={t('rate.question', { name })}>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              type="button"
-              disabled={rate.isPending}
-              aria-label={t('rate.star', { n, of: 5 })}
-              className="flex h-14 w-14 flex-col items-center justify-center text-brand hover:bg-surface-2 disabled:opacity-50"
-              onClick={() => choose(n)}
-            >
-              <IconStar size={34} />
-              <span className="num text-caption font-bold text-fg-2">{fmtNum(n)}</span>
-            </button>
-          ))}
-        </div>
-        <p className="text-small text-fg-2">{t('rate.hint')}</p>
-      </div>
-    </Sheet>
-  );
+  return <RateSheet player={player} stats={stats} settings={settings} busy={rate.isPending} onSave={save} onSkip={onDone} />;
 }
 
 const pairsOf = <T,>(xs: T[]) => xs.flatMap((a, i) => xs.slice(i + 1).map((b) => [a, b] as [T, T]));

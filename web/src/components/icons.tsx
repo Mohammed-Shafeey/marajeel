@@ -45,5 +45,6 @@ export const IconSwap = (p: P) => (<I {...p}><path d="M7 4v16M7 4 4 7M7 4l3 3M17
 export const IconBall = (p: P) => (<I {...p}><circle cx="12" cy="12" r="9" /><path d="M12 3c-1 4 0 7 3 9M3.5 9.5C7 9 10 10 12 12M12 12c-2 2-3 5-2.5 8.7M12 12c3.5 0 6.5 1.5 8.3 3.8M15 3.6C14 7 15 9.5 20 11.5" /></I>);
 export const IconLink = (p: P) => (<I {...p}><path d="M9 7H6a5 5 0 0 0 0 10h3M15 7h3a5 5 0 0 1 0 10h-3M8 12h8" /></I>);
 export const IconDownload = (p: P) => (<I {...p}><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></I>);
+export const IconExpand = (p: P) => (<I {...p}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></I>);
 export const IconGrid = (p: P) => (<I {...p}><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 12h18M12 3v18" /></I>);
 export const IconList = (p: P) => (<I {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></I>);

@@ -2,7 +2,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { GroupSettings, Player, PlayerStats, TeamColor } from '../api/types';
 import { fmtNum, fmtPct } from '../i18n';
-import { cardName, firstName } from '../lib/arabic';
+import { cardName } from '../lib/arabic';
 import { isHitting, isReceiving } from '../lib/positions';
 import { tierOf } from '../lib/teamRating';
 import { IconCheck } from './icons';
@@ -124,7 +124,11 @@ export interface MiniCardProps extends HTMLAttributes<HTMLDivElement> {
   badge?: ReactNode;
 }
 
-/** 72 × 92 shield: rating + zone at inline-start, photo or silhouette at inline-end, first name strip. */
+/**
+ * 72 × 92 shield in the player's tier colours (gold / silver / bronze / MVP / provisional), like the full card,
+ * with the team as the accent: team-coloured frame and name strip (card name). Rating + zone at inline-start,
+ * photo or silhouette at inline-end.
+ */
 export const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(function MiniCard(
   { player, stats, settings, team, position, rating, isMvp, selected, dragging, benched, badge, className = '', ...rest },
   ref,
@@ -140,7 +144,7 @@ export const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(function MiniC
       {...rest}
     >
       <div className="mini">
-        <div className={`mini-in pat-${team ?? 'a'}`} style={team ? undefined : { backgroundColor: '#5E5D66', color: '#fff' }}>
+        <div className="mini-in">
           <span className="mini-ovr num">{shown !== undefined ? fmtNum(Math.round(shown)) : '—'}</span>
           {position ? <span className="mini-zone num">{fmtNum(position)}</span> : null}
           {player?.photoUrl ? (
@@ -148,7 +152,7 @@ export const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(function MiniC
           ) : (
             <Silhouette className="mini-sil" />
           )}
-          <span className="mini-name">{firstName(name)}</span>
+          <span className={`mini-name ${team ? `pat-${team}` : ''}`}>{player ? cardName(player.name, player.shortName) : name}</span>
         </div>
       </div>
       {isMvp && (

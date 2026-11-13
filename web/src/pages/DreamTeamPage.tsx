@@ -7,6 +7,7 @@ import { EmptyState, LoadingList, TopBar } from '../components/ui';
 import { fmtNum, fmtSigned } from '../i18n';
 import { dreamTeam } from '../lib/dreamTeam';
 import { chemistryBonus } from '../lib/teamRating';
+import { displayName } from '../lib/arabic';
 
 export default function DreamTeamPage() {
   const { t } = useTranslation();
@@ -62,7 +63,7 @@ export default function DreamTeamPage() {
                   <li key={s.position} className="flex min-h-[48px] items-center gap-3 px-3">
                     <span className="num w-7 bg-ink text-center font-extrabold text-on-ink">{fmtNum(s.position)}</span>
                     <span className="w-28 text-small text-fg-2">{t(`pos.${s.position}`)}</span>
-                    <span className="flex-1 truncate font-bold">{playerMap.get(s.playerId)?.name}</span>
+                    <span className="flex-1 truncate font-bold">{displayName(playerMap.get(s.playerId)?.name ?? '')}</span>
                     <span className="num font-extrabold">{fmtNum(ctx.stats.get(s.playerId)?.positions.find((p) => p.position === s.position)?.rating ?? 0)}</span>
                   </li>
                 ))}

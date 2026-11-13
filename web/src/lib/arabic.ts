@@ -40,4 +40,11 @@ export function cardName(name: string, shortName?: string | null): string {
   return family.length <= 12 ? family : parts[0];
 }
 
+/** How a player is named everywhere in the app: first initial + family name ("م. العتيبي"). Single names stay as they are. */
+export function displayName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return name.trim();
+  return `${[...parts[0]][0]}. ${parts[parts.length - 1]}`;
+}
+
 export const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? name;

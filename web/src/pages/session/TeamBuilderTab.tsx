@@ -15,6 +15,7 @@ import { ZONE_GRID } from '../../lib/positions';
 import { newGuid } from '../../lib/rng';
 import { chemistryBonus, positionRating, teamRating, winProbability, type RatingContext, type Slot } from '../../lib/teamRating';
 import { validateRoster } from '../../lib/validation';
+import { displayName } from '../../lib/arabic';
 
 type Assign = { teamId: string | null; position: number | null; isBench: boolean };
 type DraftTeam = Pick<Team, 'id' | 'label' | 'color'>;
@@ -313,7 +314,7 @@ export default function TeamBuilderTab({ session }: { session: SessionDetail }) 
                   {team.map((sl) => (
                     <li key={sl.playerId} className="flex items-center gap-1">
                       <span className="num w-5 bg-ink text-center font-bold text-on-ink">{fmtNum(sl.position)}</span>
-                      <span className="truncate">{playerMap.get(sl.playerId)?.name}</span>
+                      <span className="truncate">{displayName(playerMap.get(sl.playerId)?.name ?? '')}</span>
                       {locks.has(sl.playerId) && <IconLock size={12} />}
                     </li>
                   ))}
