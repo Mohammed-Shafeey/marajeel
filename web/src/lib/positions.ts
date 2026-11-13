@@ -7,6 +7,23 @@ export const isHitting = (p: number) => p === 2 || p === 4;
 export const isReceiving = (p: number) => p === 1 || p === 5 || p === 6;
 export const isSetting = (p: number) => p === 3;
 
+/** Roles by zone: 1/5 receivers, 2/4 hitters, 3 setter, 6 libero. */
+const ROLE: Record<number, string> = { 1: 'receiver', 5: 'receiver', 2: 'hitter', 4: 'hitter', 3: 'setter', 6: 'libero' };
+
+/**
+ * Out-of-position penalty in rating points (same as the API's `positionPenalty` in worker/src/core/analytics.ts):
+ * same role on the other side 2, hitter ↔ receiver 3, anything involving setter or libero 6.
+ */
+export function positionPenalty(from: number, to: number): number {
+  if (from === to) return 0;
+  const a = ROLE[from];
+  const b = ROLE[to];
+  if (!a || !b) return 6;
+  if (a === b) return 2;
+  if (a === 'setter' || b === 'setter' || a === 'libero' || b === 'libero') return 6;
+  return 3;
+}
+
 /**
  * Where a zone sits within one half of the court, from that team's own view facing the net.
  * col: 0 = left, 1 = middle, 2 = right. row: 0 = front (net), 1 = back.

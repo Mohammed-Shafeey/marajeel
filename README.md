@@ -106,8 +106,9 @@ look more certain than results do. The average and count show as **Judge score**
 - **Chemistry** (per teammate pair): for each game together, take `result (1/0) − pre-game win probability`. Average those values, then
   shrink the average by `n / (n + 5)`. It's shown once a pair has at least 5 games together. The UI shows it ×20, i.e. as "rating points".
 - **Team rating** (one function for the court, balancer and dream team, `web/src/lib/teamRating.ts`): the mean of each
-  player's rating at their assigned position, plus `clamp(20 × mean pair chemistry, ±3)`. Provisional players count as the
-  group average (the "prior").
+  player's rating at their assigned position, plus `clamp(20 × mean pair chemistry, ±3)`. The position rating is used from
+  the first game there (it already leans on the main position); a never-played position uses the main position minus the
+  out-of-position penalty. Provisional players count as the group average (the "prior").
 - **Balancing:** a snake draft by position, then simulated annealing over swaps to minimise
   max − min + variance of team ratings (plus a small penalty for unfamiliar positions). It uses a seeded RNG, and *Shuffle* changes the seed.
 - **Dream team:** keeps the top 6 eligible candidates per position, then searches every combination for the highest team rating.

@@ -61,6 +61,9 @@ Judgment calls made while building, with the simplest reasonable interpretation 
   mapping. For 6-a-side, +1 team-rating point ≈ 58 %.
 - **Chemistry is displayed ×20** ("rating points"), the same scale as the team-rating bonus. Lines on the court link only
   adjacent teammates (row neighbours + same column, at most 7 per team), as in the court spec.
+- **Team ratings always use the position rating** (no fallback to the overall rating below 5 games at a position), now
+  that secondary positions lean on the main one. Out-of-position players get the penalty straight away, and nothing jumps
+  when a player reaches 5 games somewhere. The dream team still requires 5 games at a position.
 - **Provisional players count as the group prior** (the mean rating of established players, or 60 when nobody is established yet) in
   team rating, balancing and win probability, so new players don't drag a team's rating down.
 - **Streaks** are consecutive wins in chronological order. In a month window they only count games in that month.

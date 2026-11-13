@@ -1,12 +1,15 @@
 import type { Analytics, GroupSettings, PairStats, PlayerStats } from '../api/types';
+import { positionPenalty } from './positions';
 
 /**
  * The ONE team-rating function used by the court view, the balancer and the dream team.
  *
  *   teamRating = mean(player rating at their assigned position) + chemistryBonus
  *
- * - Player rating at a position: the position track if the player has ≥ minPositionGames there,
- *   otherwise their overall rating. Players with < provisionalGames overall fall back to the
+ * - Player rating at a position: their rating for that position, from the first game there (the API already
+ *   blends a secondary position with the main one, so few games there still give a sensible number). For a
+ *   position never played, the same starting point the API would use: main position minus the out-of-position
+ *   penalty, with a little extra uncertainty. Players with < provisionalGames overall fall back to the
  *   group prior (mean rating of established players, or 60 when nobody is established yet).
  * - chemistryBonus = clamp(CHEM_SCALE × mean pairwise chemistry, ±CHEM_CAP). Pairs without enough
  *   games together count as 0. Chemistry is an over/under-performance in win probability
@@ -42,8 +45,16 @@ export function positionRating(ctx: RatingContext, playerId: string, position: n
   const s = ctx.stats.get(playerId);
   if (!s || s.provisional) return ctx.prior;
   const pos = s.positions.find((p) => p.position === position);
-  if (pos && pos.games >= ctx.settings.minPositionGames) return pos.rating;
-  return s.rating;
+  if (pos && pos.games > 0) return pos.rating;
+  const main = s.positions.reduce<PlayerStats['positions'][number] | null>(
+    (m, p) => (p.games > 0 && (!m || p.games > m.games || (p.games === m.games && p.mu > m.mu)) ? p : m),
+    null,
+  );
+  if (!main) return s.rating;
+  // Mirrors positionPrior in worker/src/core/analytics.ts (transfer σ 1.5, display = 40 + 1.5·(μ − 3σ)).
+  const mu = main.mu - positionPenalty(main.position, position) / 1.5;
+  const sigma = Math.min(25 / 3, Math.sqrt(main.sigma ** 2 + 1.5 ** 2));
+  return Math.max(0, Math.min(100, Math.round(40 + 1.5 * (mu - 3 * sigma))));
 }
 
 /** Chemistry for display/bonus; null when there isn't enough data. */

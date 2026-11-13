@@ -11,16 +11,25 @@ import { scoreLooksFinished, validateGame, validateRoster } from './validation';
 const T = DEFAULT_SETTINGS.positionTemplate;
 
 describe('team rating', () => {
-  it('uses position rating when established, overall otherwise, prior when provisional', () => {
+  it('uses the position rating from the first game there, and the prior when provisional', () => {
     const a = syntheticAnalytics(4, 3, { provisionalEvery: 4 });
     const ctx = ctxFor(a);
     const p1 = a.players[1];
-    const est = p1.positions.find((p) => p.games >= 5)!;
-    const thin = p1.positions.find((p) => p.games < 5);
-    expect(positionRating(ctx, p1.playerId, est.position)).toBe(est.rating);
-    if (thin) expect(positionRating(ctx, p1.playerId, thin.position)).toBe(p1.rating);
+    for (const pos of p1.positions.filter((p) => p.games > 0)) expect(positionRating(ctx, p1.playerId, pos.position)).toBe(pos.rating);
     expect(positionRating(ctx, a.players[0].playerId, 1)).toBe(ctx.prior);
     expect(positionRating(ctx, 'unknown', 1)).toBe(ctx.prior);
+  });
+
+  it('a never-played position starts from the main position minus the penalty', () => {
+    const a = syntheticAnalytics(4, 3, {});
+    const p = a.players[1];
+    const lh = { position: 4, mu: 34, sigma: 1.3, rating: 85, games: 50, wins: 30, established: true };
+    const ctx = ctxFor({ ...a, players: [{ ...p, provisional: false, positions: [lh] }] });
+    const rh = positionRating(ctx, p.playerId, 2);
+    const setter = positionRating(ctx, p.playerId, 3);
+    expect(rh).toBeLessThan(85);
+    expect(rh).toBeGreaterThanOrEqual(79);
+    expect(setter).toBeLessThan(rh);
   });
 
   it('adds a capped chemistry bonus', () => {
