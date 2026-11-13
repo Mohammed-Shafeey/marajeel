@@ -4,6 +4,8 @@
   "name": "marajeel",
   "main": "worker/src/index.ts",
   "compatibility_date": "2025-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
   "assets": {
     "directory": "./web/dist",
     "binding": "ASSETS",
@@ -14,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "marajeel",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "001f561e-a522-4805-a767-52d69ed5c201",
       "migrations_dir": "worker/migrations"
     }
   ],
