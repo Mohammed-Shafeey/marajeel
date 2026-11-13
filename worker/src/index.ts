@@ -159,6 +159,8 @@ route('PUT', 'players/:id', 'admin', async ({ db, req, params }) => {
 
 const MAX_PHOTO_BYTES = 1_000_000;
 const isJpeg = (b: Uint8Array) => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+/** PNG: what iPhones upload for photos with transparency (they can't encode WebP in the browser). */
+const isPng = (b: Uint8Array) => b.length > 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a;
 const isWebP = (b: Uint8Array) =>
   b.length > 12 && String.fromCharCode(b[0], b[1], b[2], b[3]) === 'RIFF' && String.fromCharCode(b[8], b[9], b[10], b[11]) === 'WEBP';
 
@@ -172,8 +174,8 @@ route('PUT', 'players/:id/photo', 'admin', async ({ db, req, params }) => {
   const bytes = new Uint8Array(await req.arrayBuffer());
   if (bytes.length === 0) throw new ApiException(400, 'photo.empty', 'The photo is empty.');
   if (bytes.length > MAX_PHOTO_BYTES) throw new ApiException(400, 'photo.tooLarge', 'The photo must be under 1 MB.');
-  const contentType = isWebP(bytes) ? 'image/webp' : isJpeg(bytes) ? 'image/jpeg' : null;
-  if (!contentType) throw new ApiException(400, 'photo.notWebp', 'The photo must be a WebP (or JPEG) image.');
+  const contentType = isWebP(bytes) ? 'image/webp' : isPng(bytes) ? 'image/png' : isJpeg(bytes) ? 'image/jpeg' : null;
+  if (!contentType) throw new ApiException(400, 'photo.notWebp', 'The photo must be a WebP, PNG or JPEG image.');
   // A timestamp, not old+1: after a photo is removed (version NULL) a counter would restart at 1 and
   // reuse an earlier URL that other devices have cached forever, so they'd keep showing the old photo.
   const version = Math.max(Date.now(), (p.photo_version ?? 0) + 1);

@@ -28,7 +28,7 @@ Judgment calls made while building, with the simplest reasonable interpretation 
 - **The rating replay runs in the Worker; team rating, balancing and the dream team run in the browser.** Team rating has to update live
   while you drag cards, so it lives in one TS function (`web/src/lib/teamRating.ts`) used by the court, the balancer
   and the dream team. The API serves the per-player and per-pair numbers it needs.
-- **Photos are stored in D1** as BLOBs (~512 px WebP, tens of KB each) rather than R2, which needs a card on file to enable.
+- **Photos are stored in D1** as BLOBs (~512 px WebP, or PNG from iPhones when the image has transparency; tens to hundreds of KB each) rather than R2, which needs a card on file to enable.
   They're served via `/api/photos/{id}-{version}` with immutable caching. Each upload bumps the version and deletes the old row.
 - **Judges are a role on the same sign-in links** (`admins.role` = `admin` | `judge`). The router has three access levels
   (public / judge / admin); judges are further limited to open sessions, and only admins can close, reopen or delete one.
