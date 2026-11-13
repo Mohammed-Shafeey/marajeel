@@ -98,7 +98,11 @@ look more certain than results do. The average and count show as **Judge score**
   shows 40 and climbs as the system grows confident. A strong established player shows about 80. Players with fewer than 5
   games are *provisional*.
 - **Per-position rating:** a separate TrueSkill track per zone (1–6), updated only from games played at
-  that zone. *Best position* is the highest-rated zone with at least 5 games there.
+  that zone. The player's *main* position (most games) is shown as is. Every other position combines its own games with a
+  prior from the main position's current rating: μ minus an out-of-position penalty (2 display points for the same role on the
+  other side, 3 for hitter ↔ receiver, 6 for anything involving setter or libero) and σ widened by 1.5. So a strong left hitter
+  with a few right-hitter games is rated a few points below his left-hitter rating, not like a beginner, and more games there
+  let his own results take over. *Best position* is the highest-rated zone with at least 5 games there.
 - **Chemistry** (per teammate pair): for each game together, take `result (1/0) − pre-game win probability`. Average those values, then
   shrink the average by `n / (n + 5)`. It's shown once a pair has at least 5 games together. The UI shows it ×20, i.e. as "rating points".
 - **Team rating** (one function for the court, balancer and dream team, `web/src/lib/teamRating.ts`): the mean of each

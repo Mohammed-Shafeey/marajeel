@@ -44,6 +44,12 @@ Judgment calls made while building, with the simplest reasonable interpretation 
 
 ## Ratings & stats
 
+- **Secondary positions lean on the main position** (organiser's call: a strong player shouldn't look like a beginner
+  in a neighbouring position). At output, each non-main track's evidence (its replayed track with the default prior divided
+  out, in Gaussian natural parameters) is combined with a prior from the main track's *current* rating: μ − penalty/1.5,
+  σ = √(σ_main² + 1.5²). Penalties are 2 (left ↔ right, same role), 3 (hitter ↔ receiver), 6 (setter or libero). Doing it at
+  output rather than when the position is first played means early games there still benefit from the player's later level.
+
 - **Judge star ratings are blended into the rating** (organiser's choice), as a small μ-only nudge sized by the player's uncertainty:
   `Δμ = σ²/(σ²+β²) · (stars−3) · β/2`. Stars are relative to the player's usual level (3 = as expected). σ is unchanged, so a rating
   can't tighten from opinions alone and a harsh judge can't move an established player much. One prompt per new game, for the

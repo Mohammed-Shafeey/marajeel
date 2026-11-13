@@ -148,7 +148,7 @@ export const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(function MiniC
           <span className="mini-ovr num">{shown !== undefined ? fmtNum(Math.round(shown)) : '—'}</span>
           {position ? <span className="mini-zone num">{fmtNum(position)}</span> : null}
           {player?.photoUrl ? (
-            <img draggable={false} src={player.photoUrl} alt="" loading="lazy" className="absolute end-1 top-1 h-[44px] w-[38px] object-cover object-top" />
+            <img draggable={false} src={player.photoUrl} alt="" loading="lazy" className="absolute end-1 top-1 h-[44px] w-[36px] object-cover object-top" />
           ) : (
             <Silhouette className="mini-sil" />
           )}

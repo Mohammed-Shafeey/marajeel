@@ -1,5 +1,5 @@
 import type { GroupSettings } from './settings.ts';
-import { applyJudgeRating, defaultRating, marginWeight, toDisplay, update, winProbability, type Rating } from './trueskill.ts';
+import { applyJudgeRating, defaultRating, INITIAL_SIGMA, marginWeight, toDisplay, update, winProbability, type Rating } from './trueskill.ts';
 
 export type Side = 'A' | 'B';
 
@@ -93,6 +93,53 @@ export const orderPair = (x: string, y: string): [string, string] => (x <= y ? [
 /** Shrunk chemistry for a list of residuals (exposed for tests/documentation). */
 export const shrinkChemistry = (residuals: readonly number[]) =>
   residuals.length === 0 ? 0 : (residuals.reduce((s, r) => s + r, 0) / residuals.length) * (residuals.length / (residuals.length + CHEMISTRY_K));
+
+/** Court zones grouped by role: 1/5 receivers, 2/4 hitters, 3 setter, 6 libero. */
+const ROLE: Record<number, 'receiver' | 'hitter' | 'setter' | 'libero'> = { 1: 'receiver', 5: 'receiver', 2: 'hitter', 4: 'hitter', 3: 'setter', 6: 'libero' };
+
+/**
+ * "Out of position" penalty, in 0–100 display points, when a player starts a new position: the same role on the
+ * other side (left ↔ right hitter, left ↔ right receiver) 2, hitter ↔ receiver 3, anything involving setter or libero 6.
+ */
+export function positionPenalty(from: number, to: number): number {
+  if (from === to) return 0;
+  const a = ROLE[from];
+  const b = ROLE[to];
+  if (!a || !b) return 6;
+  if (a === b) return 2;
+  if (a === 'setter' || b === 'setter' || a === 'libero' || b === 'libero') return 6;
+  return 3;
+}
+
+/** Extra uncertainty for how well skill carries over to another position. */
+export const POSITION_TRANSFER_SIGMA = 1.5;
+
+/** Starting belief for a position, derived from the player's main position: μ minus the penalty, σ widened a little. */
+export function positionPrior(main: { position: number; rating: Rating }, position: number): Rating {
+  return {
+    mu: main.rating.mu - positionPenalty(main.position, position) / 1.5,
+    sigma: Math.min(INITIAL_SIGMA, Math.sqrt(main.rating.sigma ** 2 + POSITION_TRANSFER_SIGMA ** 2)),
+  };
+}
+
+/**
+ * Rating at a secondary position = what the player's main position says about it, combined with the games
+ * actually played there. Each position track is replayed on its own from the default start, so its evidence is the
+ * track with that default prior divided out (Gaussian natural parameters: η = μ/σ², λ = 1/σ²). We then multiply
+ * in the prior from the main position's *current* rating (see positionPrior). Few games there → close to the main
+ * position minus the penalty; many games → mostly their own results.
+ * Example: 85 at left hitter, 8 average games at right hitter → about 80 at right hitter, not ~50.
+ */
+export function combineWithMain(track: Rating, main: { position: number; rating: Rating }, position: number): Rating {
+  const d = defaultRating();
+  let lam = 1 / track.sigma ** 2 - 1 / d.sigma ** 2;
+  let eta = track.mu / track.sigma ** 2 - d.mu / d.sigma ** 2;
+  if (lam <= 1e-6) lam = eta = 0; // no usable evidence (dynamics can leave σ at the default)
+  const prior = positionPrior(main, position);
+  const lamP = 1 / prior.sigma ** 2;
+  const L = lamP + lam;
+  return { mu: (prior.mu * lamP + eta) / L, sigma: 1 / Math.sqrt(L) };
+}
 
 interface PosAcc {
   rating: Rating;
@@ -271,13 +318,21 @@ export function compute(
   }
 
   const players: PlayerStats[] = [...acc].map(([id, a]) => {
+    // Main position = most games there (ties: higher μ); other positions lean on it (see combineWithMain).
+    let main: { position: number; rating: Rating; games: number } | null = null;
+    for (const [position, p] of a.positions)
+      if (p.games > 0 && (!main || p.games > main.games || (p.games === main.games && p.rating.mu > main.rating.mu))) main = { position, rating: p.rating, games: p.games };
     const positions: PositionStats[] = [...a.positions]
       .sort(([x], [y]) => x - y)
-      .map(([position, p]) => ({
+      .map(([position, p]) => {
+        const r = main && position !== main.position ? combineWithMain(p.rating, main, position) : p.rating;
+        return { position, p, r };
+      })
+      .map(({ position, p, r }) => ({
         position,
-        mu: p.rating.mu,
-        sigma: p.rating.sigma,
-        rating: toDisplay(p.rating),
+        mu: r.mu,
+        sigma: r.sigma,
+        rating: toDisplay(r),
         games: p.games,
         wins: p.wins,
         established: p.games >= settings.minPositionGames,

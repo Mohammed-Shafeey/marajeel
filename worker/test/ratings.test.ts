@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compute } from '../src/core/analytics.ts';
+import { combineWithMain, compute, positionPenalty, positionPrior } from '../src/core/analytics.ts';
 import { DEFAULT_SETTINGS as S } from '../src/core/settings.ts';
 import { applyJudgeRating, defaultRating, INITIAL_MU, INITIAL_SIGMA, marginWeight, toDisplay, update, winProbability, type Rating } from '../src/core/trueskill.ts';
 import { Fixture } from './fixture.ts';
@@ -157,5 +157,57 @@ describe('Judge star ratings', () => {
     const g = f.add(Fixture.A, Fixture.B, 15, 12);
     const withStray = { ...g, judgeRatings: [{ playerId: f.p(12), stars: 5 }] };
     expect(stats(compute(f.players, [withStray], S), f.p(12)).judgeRatings).toBe(0);
+  });
+});
+
+describe('New positions start from what we know about the player', () => {
+  it('penalties: same role other side 2, hitter↔receiver 3, setter/libero 6', () => {
+    expect(positionPenalty(4, 2)).toBe(2);
+    expect(positionPenalty(5, 1)).toBe(2);
+    expect(positionPenalty(4, 5)).toBe(3);
+    expect(positionPenalty(4, 3)).toBe(6);
+    expect(positionPenalty(6, 1)).toBe(6);
+    expect(positionPenalty(4, 4)).toBe(0);
+  });
+
+  it('the prior is the main position minus the penalty, a little less certain', () => {
+    const main = { position: 4, rating: { mu: 34, sigma: 1.3 } };
+    const prior = positionPrior(main, 2);
+    expect(prior.mu).toBeCloseTo(34 - 2 / 1.5, 9);
+    expect(prior.sigma).toBeGreaterThan(1.3);
+    // 85 at left hitter → about 80 at right hitter with no games there: −2 penalty, ≈−3 for the extra uncertainty.
+    expect(toDisplay(main.rating)).toBe(85);
+    expect(toDisplay(prior)).toBeGreaterThanOrEqual(79);
+  });
+
+  it('with no games at the position, the combined rating is just the prior', () => {
+    const main = { position: 4, rating: { mu: 34, sigma: 1.3 } };
+    const r = combineWithMain(defaultRating(), main, 2);
+    const prior = positionPrior(main, 2);
+    expect(r.mu).toBeCloseTo(prior.mu, 9);
+    expect(r.sigma).toBeCloseTo(prior.sigma, 9);
+  });
+
+  it('games at the position pull it towards their own evidence', () => {
+    const main = { position: 4, rating: { mu: 34, sigma: 1.3 } };
+    const good = combineWithMain({ mu: 34, sigma: 3 }, main, 2);
+    const bad = combineWithMain({ mu: 18, sigma: 3 }, main, 2);
+    expect(good.mu).toBeGreaterThan(bad.mu);
+    expect(bad.mu).toBeLessThan(positionPrior(main, 2).mu);
+    expect(good.sigma).toBeLessThan(positionPrior(main, 2).sigma);
+  });
+
+  it('in the replay, a player switching positions keeps most of their level', () => {
+    const f = new Fixture();
+    // Player 0 plays position 1 (A side, index 0) and wins a lot; then swaps to position 2 for one game.
+    for (let i = 0; i < 30; i++) f.add(Fixture.A, Fixture.B, 15, 9);
+    f.add([1, 0, 2, 3, 4, 5], Fixture.B, 15, 13);
+    const p0 = stats(compute(f.players, f.games, S), f.p(0));
+    const main = p0.positions.find((p) => p.position === 1)!;
+    const other = p0.positions.find((p) => p.position === 2)!;
+    expect(other.games).toBe(1);
+    // Without the main position this would be ~40 after one game; now it stays just below the main position.
+    expect(other.rating).toBeLessThanOrEqual(main.rating);
+    expect(other.rating).toBeGreaterThanOrEqual(main.rating - 5);
   });
 });

@@ -114,6 +114,9 @@
 .tier-mvp .mini-in { background-image: repeating-linear-gradient(-55deg, rgba(244,226,43,.10) 0 2px, transparent 2px 7px), linear-gradient(160deg, #2A2A33, #121218 70%); }
 .mini-ovr { position: absolute; top: 5px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 800; font-size: 20px; line-height: 1; }
 .mini-zone { position: absolute; top: 25px; inset-inline-start: 6px; font-family: var(--font-num); font-weight: 700; font-size: 12px; opacity: .9; }
+/* .num forces direction:ltr on the number itself, which would flip its logical inset to the left in Arabic and
+   put it under the photo; pin it to the right in RTL pages (the court renders in a dir=ltr box, so it's unaffected). */
+.mini-ovr:dir(rtl), .mini-zone:dir(rtl) { left: auto; right: 4px; }
 .mini-sil { position: absolute; top: 6px; inset-inline-end: 4px; width: 40px; height: 44px; }
 .mini-name { position: absolute; top: 50px; inset-inline: 0; height: 20px; background-color: var(--team); color: var(--on-team); font-family: var(--font-display); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }
 .slot { width: 72px; height: 92px; box-sizing: border-box; border: 2px dashed var(--border-strong); border-radius: 8px; }
