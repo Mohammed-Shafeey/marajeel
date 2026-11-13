@@ -62,9 +62,7 @@
 @media (prefers-reduced-motion: reduce) { .score-tick, .toast-in, .card-reveal { animation: none; } }
 
 /* Card fit tweaks over the design reference CSS */
-.fut-ini { white-space: nowrap; font-size: 46px; }
 .fut-stats { top: 186px; row-gap: 0; }
 .fut-stat b { font-size: 18px; }
-.mini-ini { white-space: nowrap; }
 .action-bar .btn { padding-inline: 10px; font-size: 17px; white-space: nowrap; }
 .action-bar .btn-primary { font-size: 19px; }

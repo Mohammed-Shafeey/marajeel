@@ -2,7 +2,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { GroupSettings, Player, PlayerStats, TeamColor } from '../api/types';
 import { fmtNum, fmtPct } from '../i18n';
-import { cardName, firstName, initials } from '../lib/arabic';
+import { cardName, firstName } from '../lib/arabic';
 import { isHitting, isReceiving } from '../lib/positions';
 import { tierOf } from '../lib/teamRating';
 import { IconCheck } from './icons';
@@ -67,7 +67,7 @@ export function PlayerCard({ player, stats, settings, team, isMvp, selected, ben
       <div className="fut">
         <div className="fut-in">
           <div className="fut-photo" style={{ background: 'transparent', color: 'var(--on)' }}>
-            {player.photoUrl ? <img src={player.photoUrl} alt="" loading="lazy" /> : <span className="fut-ini">{initials(player.name)}</span>}
+            {player.photoUrl ? <img src={player.photoUrl} alt="" loading="lazy" /> : <Silhouette className="fut-sil" />}
           </div>
           <div className="fut-side">
             <span className="fut-ovr num">{stats ? fmtNum(stats.rating) : '—'}</span>
@@ -124,7 +124,7 @@ export interface MiniCardProps extends HTMLAttributes<HTMLDivElement> {
   badge?: ReactNode;
 }
 
-/** 72 × 92 shield: rating + zone at inline-start, initials at inline-end, first name strip. */
+/** 72 × 92 shield: rating + zone at inline-start, photo or silhouette at inline-end, first name strip. */
 export const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(function MiniCard(
   { player, stats, settings, team, position, rating, isMvp, selected, dragging, benched, badge, className = '', ...rest },
   ref,
@@ -146,7 +146,7 @@ export const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(function MiniC
           {player?.photoUrl ? (
             <img src={player.photoUrl} alt="" loading="lazy" className="absolute end-1 top-1 h-[44px] w-[38px] object-cover object-top" />
           ) : (
-            <span className="mini-ini">{initials(name).replace(' ', '')}</span>
+            <Silhouette className="mini-sil" />
           )}
           <span className="mini-name">{firstName(name)}</span>
         </div>
@@ -172,17 +172,26 @@ export function PositionChip({ position, best, compact }: { position: number; be
   );
 }
 
-/** Initials avatar or photo for list rows. */
+/** Photo or silhouette avatar for list rows. */
 export function Avatar({ player, size = 40, team }: { player: Player | undefined; size?: number; team?: TeamColor | null }) {
-  const name = player?.name ?? '?';
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden font-display font-extrabold team-${team ?? 'none'}`}
-      style={{ width: size, height: size, background: 'var(--team)', color: 'var(--on-team)', fontSize: size * 0.38, clipPath: 'polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%)' }}
+      className={`inline-flex shrink-0 items-end justify-center overflow-hidden team-${team ?? 'none'}`}
+      style={{ width: size, height: size, background: 'var(--team)', color: 'var(--on-team)', clipPath: 'polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%)' }}
       aria-hidden="true"
     >
-      {player?.photoUrl ? <img src={player.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" /> : initials(name)}
+      {player?.photoUrl ? <img src={player.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" /> : <Silhouette className="h-full w-full" />}
     </span>
+  );
+}
+
+/** Generic head-and-shoulders placeholder for players without a photo; inherits the text colour. */
+export function Silhouette({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMax meet" className={`silhouette ${className}`} aria-hidden="true" focusable="false">
+      <circle cx="50" cy="38" r="21" />
+      <path d="M8 100C8 75 26 64 50 64S92 75 92 100Z" />
+    </svg>
   );
 }
 
