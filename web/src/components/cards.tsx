@@ -67,7 +67,7 @@ export function PlayerCard({ player, stats, settings, team, isMvp, selected, ben
       <div className="fut">
         <div className="fut-in">
           <div className="fut-photo" style={{ background: 'transparent', color: 'var(--on)' }}>
-            {player.photoUrl ? <img src={player.photoUrl} alt="" loading="lazy" /> : <Silhouette className="fut-sil" />}
+            {player.photoUrl ? <img draggable={false} src={player.photoUrl} alt="" loading="lazy" /> : <Silhouette className="fut-sil" />}
           </div>
           <div className="fut-side">
             <span className="fut-ovr num">{stats ? fmtNum(stats.rating) : '—'}</span>
@@ -148,7 +148,7 @@ export const MiniCard = forwardRef<HTMLDivElement, MiniCardProps>(function MiniC
           <span className="mini-ovr num">{shown !== undefined ? fmtNum(Math.round(shown)) : '—'}</span>
           {position ? <span className="mini-zone num">{fmtNum(position)}</span> : null}
           {player?.photoUrl ? (
-            <img src={player.photoUrl} alt="" loading="lazy" className="absolute end-1 top-1 h-[44px] w-[38px] object-cover object-top" />
+            <img draggable={false} src={player.photoUrl} alt="" loading="lazy" className="absolute end-1 top-1 h-[44px] w-[38px] object-cover object-top" />
           ) : (
             <Silhouette className="mini-sil" />
           )}
@@ -184,7 +184,7 @@ export function Avatar({ player, size = 40, team }: { player: Player | undefined
       style={{ width: size, height: size, background: 'var(--team)', color: 'var(--on-team)', clipPath: 'polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%)' }}
       aria-hidden="true"
     >
-      {player?.photoUrl ? <img src={player.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" /> : <Silhouette className="h-full w-full" />}
+      {player?.photoUrl ? <img draggable={false} src={player.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" /> : <Silhouette className="h-full w-full" />}
     </span>
   );
 }

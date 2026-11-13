@@ -353,6 +353,8 @@ function BenchCard({ id, children }: { id: string; children: React.ReactNode }) 
 function ScoreBox({ team, value, onChange, winner, editable }: { team: Team; value: number; onChange: React.Dispatch<React.SetStateAction<number>>; winner: boolean; editable: boolean }) {
   const { t } = useTranslation();
   const [tick, setTick] = useState(0);
+  /** Text being typed while the field is focused (null = show the score). */
+  const [draft, setDraft] = useState<string | null>(null);
   const clamp = (v: number) => Math.max(0, Math.min(99, v));
   // Functional updates so rapid taps never read a stale score.
   const bump = (d: number) => {
@@ -370,13 +372,27 @@ function ScoreBox({ team, value, onChange, winner, editable }: { team: Team; val
         {editable ? (
           <input
             key={tick}
-            type="number"
+            // Text + numeric keypad (not type=number) so tapping selects the whole score and typing replaces it.
+            type="text"
             inputMode="numeric"
-            min={0}
-            max={99}
+            pattern="[0-9]*"
+            maxLength={2}
             aria-label={`${t('game.score')} · ${team.label}`}
-            value={value}
-            onChange={(e) => set(Number(e.target.value.replace(/\D/g, '')) || 0)}
+            placeholder="0"
+            value={draft ?? String(value)}
+            onFocus={(e) => {
+              // A 0 is cleared on tap so typing never yields "07"; any other score is selected so typing replaces it.
+              setDraft(value === 0 ? '' : String(value));
+              const el = e.currentTarget;
+              el.select();
+              requestAnimationFrame(() => el.select());
+            }}
+            onBlur={() => setDraft(null)}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 2);
+              setDraft(digits);
+              set(Number(digits) || 0);
+            }}
             className="score-tick num h-[76px] w-full !border-0 !bg-transparent text-center text-hero font-extrabold"
           />
         ) : (

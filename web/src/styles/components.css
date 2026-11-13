@@ -96,6 +96,9 @@
 .cw.is-dragging { transform: rotate(-3deg) scale(1.05); filter: drop-shadow(0 22px 18px rgba(18,18,24,.4)); z-index: 5; }
 .cw.is-benched .fut-in, .cw.is-benched .mini-in { filter: saturate(.25); }
 .cw.is-inactive { opacity: .5; filter: grayscale(1); }
+/* Card photos must not be grabbed, selected or long-pressed on their own: the touch belongs to the card (drag & drop). */
+.cw img { pointer-events: none; user-select: none; -webkit-user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
+.cw { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
 /* ---------- Mini card (72 × 92) ---------- */
 .mini, .mini-in { clip-path: polygon(0 8%, 12% 0, 88% 0, 100% 8%, 100% 86%, 50% 100%, 0 86%); }
